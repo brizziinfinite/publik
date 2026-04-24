@@ -1,18 +1,23 @@
 "use client";
 
+import { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { MoreHorizontal, Pencil, Trash2, Calendar, Image as ImageIcon } from "lucide-react";
-import type { Post } from "@/types/database";
+import { MoreHorizontal, Pencil, Trash2, Calendar, Image as ImageIcon, Send, Loader2, Eye } from "lucide-react";
+import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
+import type { Post, Brand } from "@/types/database";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { PostPreviewDialog } from "@/components/posts/PostPreviewDialog";
 
 const STATUS_CONFIG = {
   draft: { label: "Rascunho", className: "bg-muted text-muted-foreground" },
@@ -30,12 +35,37 @@ const PLATFORM_LABEL = {
 
 interface PostCardProps {
   post: Post;
+  brand: Brand | null;
   onEdit: (post: Post) => void;
   onDelete: (post: Post) => void;
+  onRefetch: () => void;
 }
 
-export function PostCard({ post, onEdit, onDelete }: PostCardProps) {
+export function PostCard({ post, brand, onEdit, onDelete, onRefetch }: PostCardProps) {
+  const [publishing, setPublishing] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const status = STATUS_CONFIG[post.status];
+  const canPublish = post.status !== "published";
+
+  async function handlePublishNow() {
+    setPublishing(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("posts")
+        .update({ status: "published", scheduled_at: new Date().toISOString() })
+        .eq("id", post.id);
+
+      if (error) throw error;
+      toast.success("Post publicado!");
+      onRefetch();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erro desconhecido";
+      toast.error("Erro ao publicar", { description: msg });
+    } finally {
+      setPublishing(false);
+    }
+  }
 
   return (
     <Card className="group border-border bg-card transition-shadow hover:shadow-md">
@@ -59,10 +89,32 @@ export function PostCard({ post, onEdit, onDelete }: PostCardProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setPreviewOpen(true)} className="cursor-pointer">
+                <Eye className="mr-2 h-4 w-4" />
+                Preview
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onEdit(post)} className="cursor-pointer">
                 <Pencil className="mr-2 h-4 w-4" />
                 Editar
               </DropdownMenuItem>
+              {canPublish && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={handlePublishNow}
+                    className="cursor-pointer text-green-500 focus:text-green-500"
+                    disabled={publishing}
+                  >
+                    {publishing ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="mr-2 h-4 w-4" />
+                    )}
+                    Publicar agora
+                  </DropdownMenuItem>
+                </>
+              )}
+              <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => onDelete(post)}
                 className="cursor-pointer text-destructive focus:text-destructive"
@@ -99,6 +151,13 @@ export function PostCard({ post, onEdit, onDelete }: PostCardProps) {
           Criado em {format(new Date(post.created_at), "dd/MM/yyyy", { locale: ptBR })}
         </p>
       </CardContent>
+
+      <PostPreviewDialog
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        post={post}
+        brand={brand}
+      />
     </Card>
   );
 }

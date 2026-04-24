@@ -12,6 +12,7 @@ import {
   ChevronDown,
   Check,
   Plus,
+  Menu,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -26,7 +27,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useEffect } from "react";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { useEffect, useState } from "react";
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -36,7 +42,7 @@ const navItems = [
   { label: "Configurações", href: "/dashboard/settings", icon: Settings },
 ];
 
-export function Sidebar() {
+function useSidebarLogic() {
   const pathname = usePathname();
   const router = useRouter();
   const user = useAppStore((s) => s.user);
@@ -44,7 +50,6 @@ export function Sidebar() {
   const setActiveBrand = useAppStore((s) => s.setActiveBrand);
   const { brands } = useBrands();
 
-  // Auto-seleciona a primeira brand se nenhuma estiver ativa ou a ativa foi deletada
   useEffect(() => {
     if (brands.length === 0) {
       setActiveBrand(null);
@@ -62,11 +67,26 @@ export function Sidebar() {
     router.push("/login");
   }
 
+  return { pathname, router, user, activeBrand, setActiveBrand, brands, handleLogout };
+}
+
+interface SidebarContentProps {
+  onNavClick?: () => void;
+}
+
+export function SidebarContent({ onNavClick }: SidebarContentProps) {
+  const { pathname, router, user, activeBrand, setActiveBrand, brands, handleLogout } =
+    useSidebarLogic();
+
   return (
-    <aside className="fixed left-0 top-0 z-40 flex h-screen w-[240px] flex-col border-r border-border bg-sidebar">
+    <div className="flex h-full flex-col">
       {/* Logo */}
       <div className="flex h-14 items-center px-6">
-        <Link href="/dashboard" className="text-xl font-bold text-foreground">
+        <Link
+          href="/dashboard"
+          className="text-xl font-bold text-foreground"
+          onClick={onNavClick}
+        >
           Publik
         </Link>
       </div>
@@ -119,7 +139,7 @@ export function Sidebar() {
             ))}
             {brands.length > 0 && <DropdownMenuSeparator />}
             <DropdownMenuItem
-              onClick={() => router.push("/dashboard/brands")}
+              onClick={() => { router.push("/dashboard/brands"); onNavClick?.(); }}
               className="cursor-pointer gap-2 text-muted-foreground"
             >
               <Plus className="h-4 w-4" />
@@ -143,6 +163,7 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onNavClick}
               className={cn(
                 "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                 isActive
@@ -174,6 +195,34 @@ export function Sidebar() {
           Sair
         </Button>
       </div>
+    </div>
+  );
+}
+
+/** Sidebar fixa para desktop (≥ md) */
+export function Sidebar() {
+  return (
+    <aside className="fixed left-0 top-0 z-40 hidden h-screen w-[240px] flex-col border-r border-border bg-sidebar md:flex">
+      <SidebarContent />
     </aside>
+  );
+}
+
+/** Botão hambúrguer + Sheet para mobile (< md) */
+export function MobileSidebar() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <Button variant="ghost" size="icon" className="md:hidden">
+          <Menu className="h-5 w-5" />
+          <span className="sr-only">Abrir menu</span>
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="left" className="w-[240px] p-0 bg-sidebar">
+        <SidebarContent onNavClick={() => setOpen(false)} />
+      </SheetContent>
+    </Sheet>
   );
 }

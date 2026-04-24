@@ -117,8 +117,10 @@ export default function PostsPage() {
               <PostCard
                 key={post.id}
                 post={post}
+                brand={activeBrand}
                 onEdit={handleEdit}
                 onDelete={setDeletingPost}
+                onRefetch={refetch}
               />
             ))}
           </div>

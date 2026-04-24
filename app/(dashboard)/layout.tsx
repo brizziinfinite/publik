@@ -8,10 +8,12 @@ export default function DashboardLayout({
 }) {
   return (
     <div className="flex min-h-screen bg-background">
+      {/* Sidebar fixa — só visível em md+ */}
       <Sidebar />
-      <div className="ml-[240px] flex flex-1 flex-col">
+      {/* Conteúdo principal — margem só em md+ */}
+      <div className="flex flex-1 flex-col md:ml-[240px]">
         <Header />
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 p-4 md:p-6">{children}</main>
       </div>
     </div>
   );

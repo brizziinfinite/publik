@@ -30,33 +30,33 @@ Marque com ✅ conforme for concluindo.
 - [x] Listagem de posts com filtros (status, brand, data)
 - [x] Formulário de criação de post (conteúdo, mídia, plataforma, data agendada)
 - [x] Upload de mídia (imagens/vídeos) para Supabase Storage
-- [ ] Preview do post antes de publicar
+- [x] Preview do post antes de publicar
 - [x] Edição de post existente
 - [x] Exclusão de post (com confirmação)
 - [x] Status de post: Rascunho / Agendado / Publicado / Falhado
-- [ ] Publicação manual imediata
+- [x] Publicação manual imediata
 - [x] Agendamento de publicação com data/hora
 
 ---
 
 ## 📅 Calendário
 
-- [ ] Visualização mensal dos posts agendados
+- [x] Visualização mensal dos posts agendados
 - [ ] Drag & drop para reagendar posts
-- [ ] Clique no post para ver detalhes/editar
-- [ ] Filtro por brand no calendário
-- [ ] Indicador visual de status (cor por status)
+- [x] Clique no post para ver detalhes/editar
+- [x] Filtro por brand no calendário (usa brand ativa do contexto)
+- [x] Indicador visual de status (cor por status)
 
 ---
 
 ## 🔐 Autenticação
 
-- [ ] Proteção real de rotas (middleware com Supabase)
-- [ ] Logout funcionando
-- [ ] Página de perfil do usuário
-- [ ] Atualização de nome e avatar
-- [ ] Troca de senha
-- [ ] Reset de senha por email
+- [x] Proteção real de rotas (proxy.ts com Supabase SSR)
+- [x] Logout funcionando
+- [x] Página de perfil do usuário
+- [x] Atualização de nome e avatar
+- [x] Troca de senha
+- [x] Reset de senha por email
 
 ---
 
@@ -75,11 +75,11 @@ Marque com ✅ conforme for concluindo.
 - [x] Toast notifications (sucesso, erro, aviso)
 - [x] Loading skeletons nas listagens
 - [x] Empty states com CTAs em todas as páginas
-- [ ] Sidebar colapsável no mobile (Sheet)
-- [ ] Responsividade completa (mobile-first)
+- [x] Sidebar colapsável no mobile (Sheet)
+- [x] Responsividade completa (mobile-first)
 - [ ] Animações de transição entre páginas
-- [ ] Dark/Light mode toggle
-- [ ] Favicon e meta tags (OG image)
+- [x] Dark/Light mode toggle
+- [x] Favicon e meta tags (OG image)
 
 ---
 

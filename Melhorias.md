@@ -7,20 +7,20 @@ Marque com ✅ conforme for concluindo.
 
 ## 🏗️ Fundação / Banco de Dados
 
-- [ ] Criar tabelas no Supabase: `profiles`, `brands`, `posts`
-- [ ] Configurar RLS em todas as tabelas
-- [ ] Criar trigger para popular `profiles` ao criar usuário
-- [ ] Gerar tipos TypeScript a partir do Supabase (`supabase gen types`)
+- [x] Criar tabelas no Supabase: `profiles`, `brands`, `posts`
+- [x] Configurar RLS em todas as tabelas
+- [x] Criar trigger para popular `profiles` ao criar usuário
+- [x] Gerar tipos TypeScript a partir do Supabase (`supabase gen types`)
 
 ---
 
 ## 🏷️ Brands
 
-- [ ] Listagem de brands do usuário
-- [ ] Formulário de criação (nome, slug, cor primária, logo)
-- [ ] Upload de logo para Supabase Storage
-- [ ] Edição de brand existente
-- [ ] Exclusão de brand (com confirmação)
+- [x] Listagem de brands do usuário
+- [x] Formulário de criação (nome, slug, cor primária, logo)
+- [x] Upload de logo para Supabase Storage
+- [x] Edição de brand existente
+- [x] Exclusão de brand (com confirmação)
 - [ ] Seletor de brand ativo na Sidebar (contexto global via Zustand)
 
 ---
@@ -72,8 +72,8 @@ Marque com ✅ conforme for concluindo.
 
 ## 🎨 UI / UX
 
-- [ ] Toast notifications (sucesso, erro, aviso)
-- [ ] Loading skeletons nas listagens
+- [x] Toast notifications (sucesso, erro, aviso)
+- [x] Loading skeletons nas listagens
 - [ ] Empty states com CTAs em todas as páginas
 - [ ] Sidebar colapsável no mobile (Sheet)
 - [ ] Responsividade completa (mobile-first)

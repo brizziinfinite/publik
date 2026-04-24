@@ -21,21 +21,21 @@ Marque com ✅ conforme for concluindo.
 - [x] Upload de logo para Supabase Storage
 - [x] Edição de brand existente
 - [x] Exclusão de brand (com confirmação)
-- [ ] Seletor de brand ativo na Sidebar (contexto global via Zustand)
+- [x] Seletor de brand ativo na Sidebar (contexto global via Zustand)
 
 ---
 
 ## 📝 Posts
 
-- [ ] Listagem de posts com filtros (status, brand, data)
-- [ ] Formulário de criação de post (conteúdo, mídia, plataforma, data agendada)
-- [ ] Upload de mídia (imagens/vídeos) para Supabase Storage
+- [x] Listagem de posts com filtros (status, brand, data)
+- [x] Formulário de criação de post (conteúdo, mídia, plataforma, data agendada)
+- [x] Upload de mídia (imagens/vídeos) para Supabase Storage
 - [ ] Preview do post antes de publicar
-- [ ] Edição de post existente
-- [ ] Exclusão de post (com confirmação)
-- [ ] Status de post: Rascunho / Agendado / Publicado / Falhado
+- [x] Edição de post existente
+- [x] Exclusão de post (com confirmação)
+- [x] Status de post: Rascunho / Agendado / Publicado / Falhado
 - [ ] Publicação manual imediata
-- [ ] Agendamento de publicação com data/hora
+- [x] Agendamento de publicação com data/hora
 
 ---
 
@@ -74,7 +74,7 @@ Marque com ✅ conforme for concluindo.
 
 - [x] Toast notifications (sucesso, erro, aviso)
 - [x] Loading skeletons nas listagens
-- [ ] Empty states com CTAs em todas as páginas
+- [x] Empty states com CTAs em todas as páginas
 - [ ] Sidebar colapsável no mobile (Sheet)
 - [ ] Responsividade completa (mobile-first)
 - [ ] Animações de transição entre páginas

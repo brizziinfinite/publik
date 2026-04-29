@@ -42,7 +42,7 @@ Marque com ✅ conforme for concluindo.
 ## 📅 Calendário
 
 - [x] Visualização mensal dos posts agendados
-- [ ] Drag & drop para reagendar posts
+- [x] Drag & drop para reagendar posts
 - [x] Clique no post para ver detalhes/editar
 - [x] Filtro por brand no calendário (usa brand ativa do contexto)
 - [x] Indicador visual de status (cor por status)
@@ -62,9 +62,9 @@ Marque com ✅ conforme for concluindo.
 
 ## ⚙️ Configurações
 
-- [ ] Configurações gerais da conta
+- [x] Configurações gerais da conta (timezone + notificações)
 - [ ] Gerenciamento de plano/assinatura (futuro)
-- [ ] Notificações por email
+- [x] Notificações por email (toggles na página de settings)
 - [ ] Integrações com redes sociais (Instagram, TikTok, etc.)
 - [ ] Tokens de API / webhooks
 
@@ -77,7 +77,7 @@ Marque com ✅ conforme for concluindo.
 - [x] Empty states com CTAs em todas as páginas
 - [x] Sidebar colapsável no mobile (Sheet)
 - [x] Responsividade completa (mobile-first)
-- [ ] Animações de transição entre páginas
+- [x] Animações de transição entre páginas (framer-motion fade+slide)
 - [x] Dark/Light mode toggle
 - [x] Favicon e meta tags (OG image)
 
@@ -90,7 +90,7 @@ Marque com ✅ conforme for concluindo.
 - [ ] Facebook / Meta
 - [ ] Twitter / X
 - [ ] LinkedIn
-- [ ] Fila de publicação via Edge Functions (cron)
+- [x] Fila de publicação via Edge Functions (cron — pg_cron a cada minuto)
 
 ---
 
@@ -99,7 +99,7 @@ Marque com ✅ conforme for concluindo.
 - [ ] Deploy na Vercel
 - [ ] Variáveis de ambiente configuradas em produção
 - [ ] Domínio customizado
-- [ ] Edge Functions para publicação agendada
+- [x] Edge Functions para publicação agendada (publish-scheduled-posts)
 - [ ] Monitoramento de erros (Sentry ou similar)
 
 ---

@@ -65,7 +65,7 @@ Marque com ✅ conforme for concluindo.
 - [x] Configurações gerais da conta (timezone + notificações)
 - [ ] Gerenciamento de plano/assinatura (futuro)
 - [x] Notificações por email (toggles na página de settings)
-- [ ] Integrações com redes sociais (Instagram, TikTok, etc.)
+- [x] Integrações com redes sociais (OAuth Meta + TikTok — aguarda credenciais)
 - [ ] Tokens de API / webhooks
 
 ---
@@ -85,9 +85,9 @@ Marque com ✅ conforme for concluindo.
 
 ## 🔗 Integrações
 
-- [ ] Instagram (Graph API)
-- [ ] TikTok
-- [ ] Facebook / Meta
+- [x] Instagram (Graph API — OAuth + publicação via Edge Function)
+- [x] TikTok (OAuth + Content Posting API)
+- [x] Facebook / Meta (OAuth + Graph API)
 - [ ] Twitter / X
 - [ ] LinkedIn
 - [x] Fila de publicação via Edge Functions (cron — pg_cron a cada minuto)

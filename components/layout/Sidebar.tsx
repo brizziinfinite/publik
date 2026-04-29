@@ -8,6 +8,7 @@ import {
   Calendar,
   Palette,
   Settings,
+  Link2,
   LogOut,
   ChevronDown,
   Check,
@@ -39,6 +40,7 @@ const navItems = [
   { label: "Posts", href: "/dashboard/posts", icon: Image },
   { label: "Calendário", href: "/dashboard/calendar", icon: Calendar },
   { label: "Brands", href: "/dashboard/brands", icon: Palette },
+  { label: "Integrações", href: "/dashboard/settings/integrations", icon: Link2 },
   { label: "Configurações", href: "/dashboard/settings", icon: Settings },
 ];
 

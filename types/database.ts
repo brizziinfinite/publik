@@ -97,6 +97,57 @@ export type Database = {
           },
         ]
       }
+      social_accounts: {
+        Row: {
+          id: string
+          user_id: string
+          brand_id: string
+          platform: "instagram" | "facebook" | "tiktok"
+          access_token: string
+          refresh_token: string | null
+          token_expires_at: string | null
+          account_id: string
+          account_name: string | null
+          account_avatar: string | null
+          scopes: string | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          brand_id: string
+          platform: "instagram" | "facebook" | "tiktok"
+          access_token: string
+          refresh_token?: string | null
+          token_expires_at?: string | null
+          account_id: string
+          account_name?: string | null
+          account_avatar?: string | null
+          scopes?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          brand_id?: string
+          platform?: "instagram" | "facebook" | "tiktok"
+          access_token?: string
+          refresh_token?: string | null
+          token_expires_at?: string | null
+          account_id?: string
+          account_name?: string | null
+          account_avatar?: string | null
+          scopes?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -163,3 +214,5 @@ export type Brand = Tables<"brands">
 export type Post = Tables<"posts">
 export type PostStatus = Enums<"post_status">
 export type PostPlatform = Enums<"post_platform">
+export type SocialAccount = Tables<"social_accounts">
+export type SocialPlatform = SocialAccount["platform"]

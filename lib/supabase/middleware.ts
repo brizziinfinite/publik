@@ -34,11 +34,16 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Rotas de OAuth callback — precisam passar sem redirect mesmo sem sessão
+  const isOAuthRoute = request.nextUrl.pathname.startsWith("/auth/");
+
   const isAuthPage =
     request.nextUrl.pathname.startsWith("/login") ||
     request.nextUrl.pathname.startsWith("/signup") ||
     request.nextUrl.pathname.startsWith("/forgot-password") ||
     request.nextUrl.pathname.startsWith("/reset-password");
+
+  if (isOAuthRoute) return supabaseResponse;
 
   const isDashboardPage = request.nextUrl.pathname.startsWith("/dashboard");
 

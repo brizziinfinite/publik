@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Loader2, User } from "lucide-react";
+import { Loader2, User, Settings, Bell } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useAppStore } from "@/store/useAppStore";
 import { Button } from "@/components/ui/button";
@@ -14,9 +14,33 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const TIMEZONES = [
+  { value: "America/Sao_Paulo", label: "Brasília (GMT-3)" },
+  { value: "America/Manaus", label: "Manaus (GMT-4)" },
+  { value: "America/Belem", label: "Belém (GMT-3)" },
+  { value: "America/Fortaleza", label: "Fortaleza (GMT-3)" },
+  { value: "America/Recife", label: "Recife (GMT-3)" },
+  { value: "America/Cuiaba", label: "Cuiabá (GMT-4)" },
+  { value: "America/Porto_Velho", label: "Porto Velho (GMT-4)" },
+  { value: "America/Rio_Branco", label: "Rio Branco (GMT-5)" },
+  { value: "America/New_York", label: "New York (GMT-5/-4)" },
+  { value: "America/Los_Angeles", label: "Los Angeles (GMT-8/-7)" },
+  { value: "Europe/London", label: "London (GMT+0/+1)" },
+  { value: "Europe/Lisbon", label: "Lisboa (GMT+0/+1)" },
+  { value: "UTC", label: "UTC (GMT+0)" },
+];
 
 const profileSchema = z.object({
   full_name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+});
+
+const preferencesSchema = z.object({
+  timezone: z.string().min(1),
+  notify_scheduled: z.boolean(),
+  notify_published: z.boolean(),
+  notify_failed: z.boolean(),
 });
 
 const passwordSchema = z
@@ -31,6 +55,7 @@ const passwordSchema = z
 
 type ProfileForm = z.infer<typeof profileSchema>;
 type PasswordForm = z.infer<typeof passwordSchema>;
+type PreferencesForm = z.infer<typeof preferencesSchema>;
 
 export default function SettingsPage() {
   const user = useAppStore((s) => s.user);
@@ -46,6 +71,16 @@ export default function SettingsPage() {
   const passwordForm = useForm<PasswordForm>({
     resolver: zodResolver(passwordSchema),
     defaultValues: { password: "", confirm: "" },
+  });
+
+  const preferencesForm = useForm<PreferencesForm>({
+    resolver: zodResolver(preferencesSchema),
+    defaultValues: {
+      timezone: "America/Sao_Paulo",
+      notify_scheduled: true,
+      notify_published: true,
+      notify_failed: true,
+    },
   });
 
   useEffect(() => {
@@ -122,6 +157,25 @@ export default function SettingsPage() {
     } finally {
       setUploadingAvatar(false);
     }
+  }
+
+  async function onPreferencesSubmit(data: PreferencesForm) {
+    // Salva as preferências no metadata do usuário (Supabase Auth)
+    const supabase = createClient();
+    const { error } = await supabase.auth.updateUser({
+      data: {
+        timezone: data.timezone,
+        notify_scheduled: data.notify_scheduled,
+        notify_published: data.notify_published,
+        notify_failed: data.notify_failed,
+      },
+    });
+
+    if (error) {
+      toast.error("Erro ao salvar preferências", { description: error.message });
+      return;
+    }
+    toast.success("Preferências salvas!");
   }
 
   return (
@@ -254,6 +308,86 @@ export default function SettingsPage() {
                 <Loader2 className="h-4 w-4 animate-spin" />
               )}
               {passwordForm.formState.isSubmitting ? "Salvando…" : "Alterar senha"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Card de preferências gerais */}
+      <Card className="border-border bg-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Preferências Gerais
+          </CardTitle>
+          <CardDescription>Configure seu fuso horário e notificações.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={preferencesForm.handleSubmit(onPreferencesSubmit)} className="space-y-6">
+            {/* Fuso horário */}
+            <div className="space-y-1.5">
+              <Label htmlFor="timezone">Fuso horário</Label>
+              <Select
+                value={preferencesForm.watch("timezone")}
+                onValueChange={(v) => preferencesForm.setValue("timezone", v)}
+              >
+                <SelectTrigger id="timezone" className="w-full">
+                  <SelectValue placeholder="Selecione o fuso horário" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TIMEZONES.map((tz) => (
+                    <SelectItem key={tz.value} value={tz.value}>
+                      {tz.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Usado para exibir as datas dos posts no horário correto.
+              </p>
+            </div>
+
+            <Separator />
+
+            {/* Notificações */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Bell className="h-4 w-4 text-muted-foreground" />
+                <Label className="text-sm font-medium">Notificações por email</Label>
+              </div>
+
+              {[
+                { field: "notify_scheduled" as const, label: "Post agendado com sucesso", desc: "Quando um post for agendado" },
+                { field: "notify_published" as const, label: "Post publicado", desc: "Quando um post for publicado automaticamente" },
+                { field: "notify_failed" as const, label: "Falha na publicação", desc: "Quando um post falhar ao publicar" },
+              ].map(({ field, label, desc }) => (
+                <div key={field} className="flex items-start justify-between gap-4 rounded-lg border border-border p-3">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{label}</p>
+                    <p className="text-xs text-muted-foreground">{desc}</p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={preferencesForm.watch(field)}
+                    onClick={() => preferencesForm.setValue(field, !preferencesForm.watch(field))}
+                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                      preferencesForm.watch(field) ? "bg-primary" : "bg-muted"
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none block h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
+                        preferencesForm.watch(field) ? "translate-x-4" : "translate-x-0"
+                      }`}
+                    />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <Button type="submit" disabled={preferencesForm.formState.isSubmitting} className="gap-2">
+              {preferencesForm.formState.isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+              {preferencesForm.formState.isSubmitting ? "Salvando…" : "Salvar preferências"}
             </Button>
           </form>
         </CardContent>

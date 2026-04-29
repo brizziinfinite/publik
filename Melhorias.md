@@ -96,8 +96,8 @@ Marque com ✅ conforme for concluindo.
 
 ## 🚀 Infra / Deploy
 
-- [ ] Deploy na Vercel
-- [ ] Variáveis de ambiente configuradas em produção
+- [x] Deploy na Vercel (https://publik-sigma.vercel.app)
+- [x] Variáveis de ambiente configuradas em produção
 - [ ] Domínio customizado
 - [x] Edge Functions para publicação agendada (publish-scheduled-posts)
 - [ ] Monitoramento de erros (Sentry ou similar)

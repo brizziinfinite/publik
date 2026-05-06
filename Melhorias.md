@@ -39,6 +39,22 @@ Marque com ✅ conforme for concluindo.
 
 ---
 
+## 🧠 Fonte → Pacote
+
+- [x] Integrar pacote base no app Next.js (`/dashboard/sources/new`, detalhe e APIs)
+- [x] Criar worker BullMQ em `worker/` para extração e geração em segundo plano
+- [x] Criar migration `001_sources_and_assets.sql`
+- [x] Adicionar item **Fontes** na sidebar
+- [x] Validar build do Next e TypeScript do worker
+- [ ] Aplicar migration no Supabase
+- [ ] Criar bucket privado `sources` no Supabase Storage
+- [ ] Configurar `REDIS_URL`, `OPENAI_API_KEY` e `ANTHROPIC_API_KEY`
+- [ ] Subir Redis/Upstash para a fila `source-processing`
+- [ ] Rodar app + worker localmente e fazer smoke test com fonte de texto
+- [ ] Validar upload/processamento de áudio, PDF e URL
+
+---
+
 ## 📅 Calendário
 
 - [x] Visualização mensal dos posts agendados

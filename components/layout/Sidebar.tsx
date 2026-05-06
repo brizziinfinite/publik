@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Image,
+  FileText,
   Calendar,
   Palette,
   Settings,
@@ -38,6 +39,7 @@ import { useEffect, useState } from "react";
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Posts", href: "/dashboard/posts", icon: Image },
+  { label: "Fontes", href: "/dashboard/sources/new", icon: FileText },
   { label: "Calendário", href: "/dashboard/calendar", icon: Calendar },
   { label: "Brands", href: "/dashboard/brands", icon: Palette },
   { label: "Integrações", href: "/dashboard/settings/integrations", icon: Link2 },

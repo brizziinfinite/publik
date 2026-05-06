@@ -1,0 +1,27 @@
+{
+  "name": "publik-worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.68.0",
+    "@mozilla/readability": "^0.6.0",
+    "@supabase/supabase-js": "^2.104.1",
+    "bullmq": "^5.65.0",
+    "dotenv": "^17.4.2",
+    "ioredis": "^5.8.2",
+    "jsdom": "^27.2.0",
+    "openai": "^6.9.1",
+    "pdf-parse": "^2.4.5",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^27.0.0",
+    "@types/node": "^20",
+    "tsx": "^4.21.0",
+    "typescript": "^5"
+  }
+}

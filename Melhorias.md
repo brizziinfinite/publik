@@ -120,6 +120,70 @@ Marque com ✅ conforme for concluindo.
 
 ---
 
+## 🤖 Sprint 1 — Agente 1 (Estrategista)
+
+### O que foi implementado
+
+- Edge Function `agent-1-strategist` que lê o Plano Base de cada brand ativa e gera 7 ideias de conteúdo via Gemini Flash 2.5 (ou Claude Haiku como fallback)
+- Página `/dashboard/ideas` com listagem, aprovação, rejeição e edição de ideias
+- Item "Ideias" adicionado na Sidebar
+
+### Tabelas criadas
+
+- `public.brand_plans` — Plano Base com objetivos, fase, prioridades semanais, pricing e brand assets
+- `public.content_ideas` — Backlog de ideias geradas pelo Agente 1 (7 por semana, distribuídas seg-dom)
+- `public.agent_runs` — Log de execuções dos agentes (tokens, custo, duração, status)
+
+### Colunas adicionadas em `brands`
+
+- `niche` — nicho do negócio
+- `tone` — tom de voz detalhado (texto)
+- `target_persona` — persona-alvo
+- `pillars` — pilares de conteúdo (JSONB array)
+- `forbidden_topics` — tópicos proibidos (text[])
+- `is_active` — flag de ativação
+
+### Variáveis de ambiente necessárias
+
+```
+GEMINI_API_KEY=AIzaSy...        # obrigatório (free tier em aistudio.google.com)
+ANTHROPIC_API_KEY=sk-ant-...    # opcional (fallback via LLM_PROVIDER=anthropic)
+LLM_PROVIDER=gemini             # padrão: gemini | alternativa: anthropic
+```
+
+### Como testar
+
+1. Cadastrar brand **IrrigaAgro** via UI em `/dashboard/brands`
+2. Aplicar migrations:
+   ```bash
+   supabase db push
+   ```
+3. Configurar secret no Supabase:
+   ```bash
+   supabase secrets set GEMINI_API_KEY=AIzaSy...
+   ```
+4. Deploy da Edge Function:
+   ```bash
+   supabase functions deploy agent-1-strategist
+   ```
+5. Acessar `/dashboard/ideas` e clicar **"Gerar agora"**
+
+Ou via curl:
+```bash
+curl -X POST "$NEXT_PUBLIC_SUPABASE_URL/functions/v1/agent-1-strategist" \
+  -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"brand_id": "<uuid-da-brand>"}'
+```
+
+### Limitações conhecidas
+
+- Sem UI para criar/editar o Plano Base — configuração é via seed SQL
+- Sem agendamento automático do agente (pg_cron) — execução manual por enquanto
+- Sem integração com Posts — ideias aprovadas não viram posts automaticamente (Sprint 2)
+
+---
+
 ## 📊 Analytics (futuro)
 
 - [ ] Taxa de engajamento por post

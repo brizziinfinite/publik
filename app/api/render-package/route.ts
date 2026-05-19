@@ -74,8 +74,8 @@ export async function POST(req: Request) {
       brand_id,
       user_id,
       idea_id,
-      brands!inner(name, visual_identity_v2, visual_kit_id),
-      content_ideas!inner(topic, hook, cta)
+      brands!content_packages_brand_id_fkey(name, visual_identity_v2, visual_kit_id),
+      content_ideas!content_packages_idea_id_fkey(topic, hook, cta)
     `)
     .eq('id', package_id)
     .single();

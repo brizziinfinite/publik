@@ -120,6 +120,110 @@ Marque com ✅ conforme for concluindo.
 
 ---
 
+## 🤖 Sprint 1 — Agente 1 (Estrategista)
+
+### O que foi implementado
+
+- Edge Function `agent-1-strategist` que lê o Plano Base de cada brand ativa e gera 7 ideias de conteúdo via Gemini Flash 2.5 (ou Claude Haiku como fallback)
+- Página `/dashboard/ideas` com listagem, aprovação, rejeição e edição de ideias
+- Item "Ideias" adicionado na Sidebar
+
+### Tabelas criadas
+
+- `public.brand_plans` — Plano Base com objetivos, fase, prioridades semanais, pricing e brand assets
+- `public.content_ideas` — Backlog de ideias geradas pelo Agente 1 (7 por semana, distribuídas seg-dom)
+- `public.agent_runs` — Log de execuções dos agentes (tokens, custo, duração, status)
+
+### Colunas adicionadas em `brands`
+
+- `niche` — nicho do negócio
+- `tone` — tom de voz detalhado (texto)
+- `target_persona` — persona-alvo
+- `pillars` — pilares de conteúdo (JSONB array)
+- `forbidden_topics` — tópicos proibidos (text[])
+- `is_active` — flag de ativação
+
+### Variáveis de ambiente necessárias
+
+```
+GEMINI_API_KEY=AIzaSy...        # obrigatório (free tier em aistudio.google.com)
+ANTHROPIC_API_KEY=sk-ant-...    # opcional (fallback via LLM_PROVIDER=anthropic)
+LLM_PROVIDER=gemini             # padrão: gemini | alternativa: anthropic
+```
+
+### Como testar
+
+1. Cadastrar brand **IrrigaAgro** via UI em `/dashboard/brands`
+2. Aplicar migrations:
+   ```bash
+   supabase db push
+   ```
+3. Configurar secret no Supabase:
+   ```bash
+   supabase secrets set GEMINI_API_KEY=AIzaSy...
+   ```
+4. Deploy da Edge Function:
+   ```bash
+   supabase functions deploy agent-1-strategist
+   ```
+5. Acessar `/dashboard/ideas` e clicar **"Gerar agora"**
+
+Ou via curl:
+```bash
+curl -X POST "$NEXT_PUBLIC_SUPABASE_URL/functions/v1/agent-1-strategist" \
+  -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"brand_id": "<uuid-da-brand>"}'
+```
+
+### Limitações conhecidas
+
+- Sem UI para criar/editar o Plano Base — configuração é via seed SQL
+- Sem agendamento automático do agente (pg_cron) — execução manual por enquanto
+
+---
+
+## 🤖 Sprint 2 — Agente 2 (Roteirista)
+
+### O que foi implementado
+
+- Edge Function `agent-2-roteirista`: recebe `idea_id` (aprovada) e gera pacote de conteúdo completo via Gemini Flash 2.5
+- 6 prompts específicos por formato: carrossel (slides com title/body/cta), reel (hook + cenas + CTA), story (frames com texto + sticker), blog (título + intro + conclusão), email (assunto + preview + corpo HTML), post (caption + primeiro comentário)
+- Idempotência: retorna pacote existente se ideia já tiver pacote ativo
+- Página `/dashboard/packages`: listagem de todos os pacotes com filtro por status
+- Página `/dashboard/packages/[id]`: detalhe com render por formato, visual prompt, metadados de custo, ações Aprovar / Rejeitar / Converter em post
+- Botão "Gerar pacote" / "Ver pacote" nos cards de ideias aprovadas
+- Utilitário `lib/packages/convertToPost.ts`: converte pacote aprovado em post agendado (reutiliza `scheduled_for` da ideia)
+- Item "Pacotes" adicionado na Sidebar
+
+### Tabelas criadas
+
+- `public.content_packages` — Pacotes gerados pelo Agente 2, um por ideia ativa, com colunas JSONB por formato
+- Coluna `package_id` adicionada em `content_ideas`
+
+### Variáveis de ambiente
+
+Mesmas do Sprint 1 (`GEMINI_API_KEY`, `LLM_PROVIDER`).
+
+### Fluxo completo
+
+```
+/dashboard/ideas
+  → Aprovar ideia
+  → Gerar pacote (chama agent-2-roteirista)
+  → /dashboard/packages/[id]
+  → Aprovar pacote
+  → Converter em post → /dashboard/posts
+```
+
+### Limitações conhecidas
+
+- Sem revisão de texto in-line no pacote (edição de caption, slides etc.) — só aprova/rejeita
+- Sem geração de imagem (visual_prompt gerado mas não executado)
+- Sem agendamento automático do Agente 2 — execução manual por ideia
+
+---
+
 ## 📊 Analytics (futuro)
 
 - [ ] Taxa de engajamento por post

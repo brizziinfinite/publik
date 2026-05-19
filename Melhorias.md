@@ -180,7 +180,47 @@ curl -X POST "$NEXT_PUBLIC_SUPABASE_URL/functions/v1/agent-1-strategist" \
 
 - Sem UI para criar/editar o Plano Base — configuração é via seed SQL
 - Sem agendamento automático do agente (pg_cron) — execução manual por enquanto
-- Sem integração com Posts — ideias aprovadas não viram posts automaticamente (Sprint 2)
+
+---
+
+## 🤖 Sprint 2 — Agente 2 (Roteirista)
+
+### O que foi implementado
+
+- Edge Function `agent-2-roteirista`: recebe `idea_id` (aprovada) e gera pacote de conteúdo completo via Gemini Flash 2.5
+- 6 prompts específicos por formato: carrossel (slides com title/body/cta), reel (hook + cenas + CTA), story (frames com texto + sticker), blog (título + intro + conclusão), email (assunto + preview + corpo HTML), post (caption + primeiro comentário)
+- Idempotência: retorna pacote existente se ideia já tiver pacote ativo
+- Página `/dashboard/packages`: listagem de todos os pacotes com filtro por status
+- Página `/dashboard/packages/[id]`: detalhe com render por formato, visual prompt, metadados de custo, ações Aprovar / Rejeitar / Converter em post
+- Botão "Gerar pacote" / "Ver pacote" nos cards de ideias aprovadas
+- Utilitário `lib/packages/convertToPost.ts`: converte pacote aprovado em post agendado (reutiliza `scheduled_for` da ideia)
+- Item "Pacotes" adicionado na Sidebar
+
+### Tabelas criadas
+
+- `public.content_packages` — Pacotes gerados pelo Agente 2, um por ideia ativa, com colunas JSONB por formato
+- Coluna `package_id` adicionada em `content_ideas`
+
+### Variáveis de ambiente
+
+Mesmas do Sprint 1 (`GEMINI_API_KEY`, `LLM_PROVIDER`).
+
+### Fluxo completo
+
+```
+/dashboard/ideas
+  → Aprovar ideia
+  → Gerar pacote (chama agent-2-roteirista)
+  → /dashboard/packages/[id]
+  → Aprovar pacote
+  → Converter em post → /dashboard/posts
+```
+
+### Limitações conhecidas
+
+- Sem revisão de texto in-line no pacote (edição de caption, slides etc.) — só aprova/rejeita
+- Sem geração de imagem (visual_prompt gerado mas não executado)
+- Sem agendamento automático do Agente 2 — execução manual por ideia
 
 ---
 

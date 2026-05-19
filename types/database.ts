@@ -161,6 +161,7 @@ export type Database = {
           week_of: string | null
           status: "pending" | "approved" | "rejected" | "generated" | "posted" | "archived"
           post_id: string | null
+          package_id: string | null
           generated_by: string
           llm_model: string | null
           llm_cost_usd: number
@@ -185,6 +186,7 @@ export type Database = {
           week_of?: string | null
           status?: "pending" | "approved" | "rejected" | "generated" | "posted" | "archived"
           post_id?: string | null
+          package_id?: string | null
           generated_by?: string
           llm_model?: string | null
           llm_cost_usd?: number
@@ -209,6 +211,7 @@ export type Database = {
           week_of?: string | null
           status?: "pending" | "approved" | "rejected" | "generated" | "posted" | "archived"
           post_id?: string | null
+          package_id?: string | null
           generated_by?: string
           llm_model?: string | null
           llm_cost_usd?: number
@@ -220,6 +223,98 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_packages: {
+        Row: {
+          id: string
+          brand_id: string
+          user_id: string
+          idea_id: string
+          format: "carrossel" | "reel" | "story" | "blog" | "email" | "post"
+          carousel_slides: Json | null
+          reel_script: Json | null
+          story_frames: Json | null
+          blog_content: Json | null
+          email_content: Json | null
+          post_content: Json | null
+          visual_prompt: string | null
+          estimated_post_length: number | null
+          status: "generating" | "pending_review" | "approved" | "converted_to_post" | "rejected" | "failed"
+          post_id: string | null
+          generated_by: string
+          llm_provider: string | null
+          llm_model: string | null
+          llm_cost_usd: number
+          generation_attempts: number
+          error_message: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          brand_id: string
+          user_id: string
+          idea_id: string
+          format: "carrossel" | "reel" | "story" | "blog" | "email" | "post"
+          carousel_slides?: Json | null
+          reel_script?: Json | null
+          story_frames?: Json | null
+          blog_content?: Json | null
+          email_content?: Json | null
+          post_content?: Json | null
+          visual_prompt?: string | null
+          estimated_post_length?: number | null
+          status?: "generating" | "pending_review" | "approved" | "converted_to_post" | "rejected" | "failed"
+          post_id?: string | null
+          generated_by?: string
+          llm_provider?: string | null
+          llm_model?: string | null
+          llm_cost_usd?: number
+          generation_attempts?: number
+          error_message?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          brand_id?: string
+          user_id?: string
+          idea_id?: string
+          format?: "carrossel" | "reel" | "story" | "blog" | "email" | "post"
+          carousel_slides?: Json | null
+          reel_script?: Json | null
+          story_frames?: Json | null
+          blog_content?: Json | null
+          email_content?: Json | null
+          post_content?: Json | null
+          visual_prompt?: string | null
+          estimated_post_length?: number | null
+          status?: "generating" | "pending_review" | "approved" | "converted_to_post" | "rejected" | "failed"
+          post_id?: string | null
+          generated_by?: string
+          llm_provider?: string | null
+          llm_model?: string | null
+          llm_cost_usd?: number
+          generation_attempts?: number
+          error_message?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_packages_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_packages_idea_id_fkey"
+            columns: ["idea_id"]
+            isOneToOne: false
+            referencedRelation: "content_ideas"
             referencedColumns: ["id"]
           },
         ]
@@ -451,4 +546,5 @@ export type SocialAccount = Tables<"social_accounts">
 export type SocialPlatform = SocialAccount["platform"]
 export type BrandPlan = Tables<"brand_plans">
 export type ContentIdea = Tables<"content_ideas">
+export type ContentPackage = Tables<"content_packages">
 export type AgentRun = Tables<"agent_runs">

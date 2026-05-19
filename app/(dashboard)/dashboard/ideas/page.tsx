@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
-import { Sparkles, ThumbsUp, ThumbsDown, Loader2, RefreshCw, Pencil } from "lucide-react";
+import { Sparkles, ThumbsUp, ThumbsDown, Loader2, RefreshCw, Pencil, Layers, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +15,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useAppStore } from "@/store/useAppStore";
 import type { TablesUpdate } from "@/types/database";
@@ -39,6 +40,7 @@ interface ContentIdea {
   scheduled_for: string | null;
   week_of: string | null;
   status: IdeaStatus;
+  package_id: string | null;
   llm_model: string | null;
   created_at: string;
 }
@@ -76,11 +78,17 @@ interface IdeaCardProps {
   onApprove: (id: string) => void;
   onReject: (id: string) => void;
   onEdit: (idea: ContentIdea) => void;
+  onGeneratePackage: (id: string) => void;
+  generatingPackageId: string | null;
 }
 
-function IdeaCard({ idea, onApprove, onReject, onEdit }: IdeaCardProps) {
+function IdeaCard({ idea, onApprove, onReject, onEdit, onGeneratePackage, generatingPackageId }: IdeaCardProps) {
+  const router = useRouter();
   const isApproved = idea.status === "approved";
   const isRejected = idea.status === "rejected";
+  const isGenerated = idea.status === "generated";
+  const hasPackage = !!idea.package_id;
+  const isGeneratingThis = generatingPackageId === idea.id;
 
   return (
     <div className="rounded-lg border border-border bg-card flex flex-col shadow-sm">
@@ -146,36 +154,66 @@ function IdeaCard({ idea, onApprove, onReject, onEdit }: IdeaCardProps) {
       </div>
 
       {/* Ações */}
-      <div className="flex gap-2 p-3 border-t border-border">
-        <Button
-          size="sm"
-          variant={isApproved ? "default" : "outline"}
-          className="flex-1 gap-1 text-xs"
-          onClick={() => onApprove(idea.id)}
-          disabled={isApproved}
-        >
-          <ThumbsUp className="h-3 w-3" />
-          Aprovar
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          className="flex-1 gap-1 text-xs"
-          onClick={() => onEdit(idea)}
-        >
-          <Pencil className="h-3 w-3" />
-          Editar
-        </Button>
-        <Button
-          size="sm"
-          variant={isRejected ? "destructive" : "outline"}
-          className="flex-1 gap-1 text-xs"
-          onClick={() => onReject(idea.id)}
-          disabled={isRejected}
-        >
-          <ThumbsDown className="h-3 w-3" />
-          Rejeitar
-        </Button>
+      <div className="flex flex-col gap-2 p-3 border-t border-border">
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant={isApproved || isGenerated ? "default" : "outline"}
+            className="flex-1 gap-1 text-xs"
+            onClick={() => onApprove(idea.id)}
+            disabled={isApproved || isGenerated}
+          >
+            <ThumbsUp className="h-3 w-3" />
+            Aprovar
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="flex-1 gap-1 text-xs"
+            onClick={() => onEdit(idea)}
+          >
+            <Pencil className="h-3 w-3" />
+            Editar
+          </Button>
+          <Button
+            size="sm"
+            variant={isRejected ? "destructive" : "outline"}
+            className="flex-1 gap-1 text-xs"
+            onClick={() => onReject(idea.id)}
+            disabled={isRejected}
+          >
+            <ThumbsDown className="h-3 w-3" />
+            Rejeitar
+          </Button>
+        </div>
+        {(isApproved || isGenerated) && (
+          hasPackage ? (
+            <Button
+              size="sm"
+              variant="secondary"
+              className="w-full gap-1 text-xs"
+              onClick={() => router.push(`/dashboard/packages/${idea.package_id}`)}
+            >
+              <ExternalLink className="h-3 w-3" />
+              Ver pacote
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full gap-1 text-xs"
+              onClick={() => onGeneratePackage(idea.id)}
+              disabled={isGeneratingThis}
+            >
+              {isGeneratingThis ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <Layers className="h-3 w-3" />
+              )}
+              {isGeneratingThis ? "Gerando..." : "Gerar pacote"}
+            </Button>
+          )
+        )}
       </div>
     </div>
   );
@@ -275,6 +313,7 @@ export default function IdeasPage() {
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [editingIdea, setEditingIdea] = useState<ContentIdea | null>(null);
+  const [generatingPackageId, setGeneratingPackageId] = useState<string | null>(null);
 
   const supabase = createClient();
 
@@ -297,7 +336,7 @@ export default function IdeasPage() {
   }, [activeBrand]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    void loadIdeas();
+    void loadIdeas(); // eslint-disable-line react-hooks/set-state-in-effect
   }, [loadIdeas]);
 
   async function handleGenerate() {
@@ -398,6 +437,38 @@ export default function IdeasPage() {
     }
   }
 
+  async function handleGeneratePackage(ideaId: string) {
+    setGeneratingPackageId(ideaId);
+    toast.info("Gerando pacote de conteúdo...");
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Sessão expirada. Faça login novamente.");
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/agent-2-roteirista`,
+        {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${session.access_token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ idea_id: ideaId }),
+        }
+      );
+
+      const json = await res.json() as { package_id?: string; error?: string };
+      if (!res.ok) throw new Error(json.error ?? `HTTP ${res.status}`);
+
+      toast.success("Pacote gerado com sucesso!");
+      await loadIdeas();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error("Erro ao gerar pacote: " + message);
+    } finally {
+      setGeneratingPackageId(null);
+    }
+  }
+
   const pendingIdeas   = ideas.filter((i) => i.status === "pending");
   const approvedIdeas  = ideas.filter((i) => i.status === "approved");
   const otherIdeas     = ideas.filter((i) => !["pending", "approved"].includes(i.status));
@@ -479,6 +550,8 @@ export default function IdeasPage() {
                 onApprove={handleApprove}
                 onReject={handleReject}
                 onEdit={setEditingIdea}
+                onGeneratePackage={handleGeneratePackage}
+                generatingPackageId={generatingPackageId}
               />
             ))}
           </div>
@@ -499,6 +572,8 @@ export default function IdeasPage() {
                 onApprove={handleApprove}
                 onReject={handleReject}
                 onEdit={setEditingIdea}
+                onGeneratePackage={handleGeneratePackage}
+                generatingPackageId={generatingPackageId}
               />
             ))}
           </div>
@@ -519,6 +594,8 @@ export default function IdeasPage() {
                 onApprove={handleApprove}
                 onReject={handleReject}
                 onEdit={setEditingIdea}
+                onGeneratePackage={handleGeneratePackage}
+                generatingPackageId={generatingPackageId}
               />
             ))}
           </div>

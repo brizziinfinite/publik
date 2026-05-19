@@ -1,5 +1,11 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
 interface BrandRow {
@@ -132,7 +138,7 @@ function getFocusForWeek(priorities: WeeklyPriority[], week: number): string {
 
 function extractJson(raw: string): string {
   // Remove cercas markdown ```json ... ```
-  const fenceMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
+  const fenceMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/s);
   if (fenceMatch) return fenceMatch[1].trim();
 
   // Extrai entre primeira { e última }
@@ -141,6 +147,12 @@ function extractJson(raw: string): string {
   if (start !== -1 && end !== -1 && end > start) {
     return raw.slice(start, end + 1);
   }
+
+  // Fallback: retorna tudo a partir do primeiro {
+  if (start !== -1) {
+    return raw.slice(start);
+  }
+
   return raw.trim();
 }
 
@@ -156,9 +168,8 @@ async function callGemini(
   const body = {
     contents: [{ role: "user", parts: [{ text: prompt }] }],
     generationConfig: {
-      temperature: 0.8,
-      maxOutputTokens: 4096,
-      responseMimeType: "application/json",
+      temperature: 0.7,
+      maxOutputTokens: 8192,
     },
   };
 
@@ -235,14 +246,17 @@ function buildPrompt(
     .map((p) => `- ${p.name} (${p.id}): ${p.description}`)
     .join("\n");
 
-  const forbidden = brand.forbidden_topics.join(", ");
+  const forbidden = brand.forbidden_topics.slice(0, 4).join(", ");
+  // Truncar tom e persona para não explodir o contexto
+  const tone     = (brand.tone ?? "técnico-acessível").slice(0, 300);
+  const persona  = (brand.target_persona ?? "produtor rural médio porte").slice(0, 300);
 
-  return `Você é o Agente 1 Estrategista do Publik, um sistema de automação de marketing para SaaS de agronegócio.
+  return `Você é o Agente 1 Estrategista do Publik, sistema de automação de marketing para SaaS de agronegócio.
 
 # BRAND: ${brand.name}
 - Nicho: ${brand.niche ?? "SaaS agro"}
-- Tom de voz: ${brand.tone ?? "técnico-acessível"}
-- Persona-alvo: ${brand.target_persona ?? "produtor rural médio porte"}
+- Tom: ${tone}
+- Persona: ${persona}
 
 # PLANO BASE
 - Objetivo principal: ${plan.goal_primary}
@@ -288,12 +302,17 @@ Retorne APENAS um JSON válido neste formato (sem texto extra, sem markdown):
 // ─── Handler principal ────────────────────────────────────────────────────────
 
 Deno.serve(async (req: Request) => {
+  // Preflight CORS
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: corsHeaders });
+  }
+
   // Autenticação
   const authHeader = req.headers.get("Authorization");
   if (!authHeader?.startsWith("Bearer ")) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   }
 
@@ -307,13 +326,13 @@ Deno.serve(async (req: Request) => {
   if (llmProvider === "gemini" && !geminiKey) {
     return new Response(JSON.stringify({ error: "GEMINI_API_KEY não configurada" }), {
       status: 500,
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   }
   if (llmProvider === "anthropic" && !anthropicKey) {
     return new Response(JSON.stringify({ error: "ANTHROPIC_API_KEY não configurada" }), {
       status: 500,
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   }
 
@@ -343,7 +362,7 @@ Deno.serve(async (req: Request) => {
   if (brandsError) {
     return new Response(JSON.stringify({ error: brandsError.message }), {
       status: 500,
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   }
 
@@ -529,6 +548,6 @@ Deno.serve(async (req: Request) => {
 
   return new Response(JSON.stringify({ results }), {
     status: 200,
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...corsHeaders },
   });
 });

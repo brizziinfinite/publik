@@ -43,7 +43,7 @@ create table if not exists public.brand_plans (
   -- Timeline
   timeline_days        int         not null,
   started_at           date        not null default current_date,
-  deadline             date        generated always as (started_at + (timeline_days || ' days')::interval) stored,
+  deadline             date        generated always as (started_at + (timeline_days * interval '1 day')) stored,
 
   -- Fase e contexto
   current_phase        text        not null check (current_phase in (

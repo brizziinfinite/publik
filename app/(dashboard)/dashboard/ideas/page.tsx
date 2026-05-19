@@ -83,67 +83,70 @@ function IdeaCard({ idea, onApprove, onReject, onEdit }: IdeaCardProps) {
   const isRejected = idea.status === "rejected";
 
   return (
-    <div className="rounded-lg border border-border bg-card p-4 flex flex-col gap-3 shadow-sm">
-      {/* Cabeçalho */}
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${FORMAT_COLORS[idea.format]}`}>
-            {idea.format}
+    <div className="rounded-lg border border-border bg-card flex flex-col shadow-sm">
+      {/* Conteúdo */}
+      <div className="flex flex-col gap-2 p-4">
+        {/* Cabeçalho */}
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${FORMAT_COLORS[idea.format]}`}>
+              {idea.format}
+            </span>
+            {idea.pillar && (
+              <Badge variant="outline" className="text-xs">
+                {idea.pillar}
+              </Badge>
+            )}
+            {idea.status !== "pending" && (
+              <Badge variant="secondary" className="text-xs">
+                {STATUS_LABELS[idea.status]}
+              </Badge>
+            )}
+          </div>
+          <span className="text-xs text-muted-foreground whitespace-nowrap">
+            {formatDate(idea.scheduled_for)}
           </span>
-          {idea.pillar && (
-            <Badge variant="outline" className="text-xs">
-              {idea.pillar}
-            </Badge>
-          )}
-          {idea.status !== "pending" && (
-            <Badge variant="secondary" className="text-xs">
-              {STATUS_LABELS[idea.status]}
-            </Badge>
-          )}
         </div>
-        <span className="text-xs text-muted-foreground whitespace-nowrap">
-          {formatDate(idea.scheduled_for)}
-        </span>
+
+        {/* Ângulo */}
+        {idea.angle && (
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide line-clamp-1">
+            {idea.angle}
+          </p>
+        )}
+
+        {/* Tópico */}
+        <p className="text-sm font-semibold text-foreground leading-snug line-clamp-2">
+          {idea.topic}
+        </p>
+
+        {/* Hook */}
+        {idea.hook && (
+          <div className="rounded bg-muted/60 px-3 py-2 text-xs italic text-muted-foreground line-clamp-2">
+            &quot;{idea.hook}&quot;
+          </div>
+        )}
+
+        {/* Detail */}
+        {idea.detail && (
+          <p className="text-xs text-muted-foreground line-clamp-3">{idea.detail}</p>
+        )}
+
+        {/* CTA */}
+        {idea.cta && (
+          <p className="text-xs font-medium text-primary line-clamp-2">CTA: {idea.cta}</p>
+        )}
+
+        {/* Contribuição */}
+        {idea.contributes_to && (
+          <p className="text-xs text-muted-foreground line-clamp-1">
+            <span className="font-medium">Contribui: </span>{idea.contributes_to}
+          </p>
+        )}
       </div>
 
-      {/* Ângulo */}
-      {idea.angle && (
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          {idea.angle}
-        </p>
-      )}
-
-      {/* Tópico */}
-      <p className="text-sm font-semibold text-foreground leading-snug">
-        {idea.topic}
-      </p>
-
-      {/* Hook */}
-      {idea.hook && (
-        <div className="rounded bg-muted/60 px-3 py-2 text-sm italic text-muted-foreground">
-          &quot;{idea.hook}&quot;
-        </div>
-      )}
-
-      {/* Detail */}
-      {idea.detail && (
-        <p className="text-xs text-muted-foreground">{idea.detail}</p>
-      )}
-
-      {/* CTA */}
-      {idea.cta && (
-        <p className="text-xs font-medium text-primary">CTA: {idea.cta}</p>
-      )}
-
-      {/* Contribuição */}
-      {idea.contributes_to && (
-        <p className="text-xs text-muted-foreground">
-          <span className="font-medium">Contribui: </span>{idea.contributes_to}
-        </p>
-      )}
-
       {/* Ações */}
-      <div className="flex gap-2 pt-1 border-t border-border mt-auto">
+      <div className="flex gap-2 p-3 border-t border-border">
         <Button
           size="sm"
           variant={isApproved ? "default" : "outline"}

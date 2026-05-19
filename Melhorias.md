@@ -263,6 +263,42 @@ ORDER BY started_at DESC LIMIT 1;
 
 ---
 
+## 🎨 Sprint 3 — Fase 2/6 — Catálogo de Visual Kits
+
+### 9 kits inseridos
+
+| Kit | Mood | Segmentos principais |
+|-----|------|---------------------|
+| `agro_serio` | editorial | agro, irrigação, pecuária, soja |
+| `oficina_industrial` | bold | mecânica, autoelétrica, borracharia |
+| `boutique_feminina` | editorial | moda, acessórios, boutique |
+| `confeitaria_caseira` | editorial | doces, bolos, padaria |
+| `personal_energetico` | bold | fitness, crossfit, personal |
+| `advocacia_institucional` | editorial | advocacia, contabilidade, consultoria |
+| `pizzaria_calorosa` | bold | pizzaria, hamburgueria, delivery |
+| `tatuagem_underground` | bold | tatuagem, piercing, barbearia |
+| `imobiliaria_premium` | editorial | imóveis, corretor, arquitetura |
+
+### IrrigaAgro vinculada
+
+`segment=irrigacao`, `visual_kit_id=agro_serio`, `visual_identity_v2` populado com tokens completos do kit.
+
+### Arquivos criados
+
+- `types/visual-kits.ts` — interfaces TypeScript para kits, palette, typography, layout
+- `lib/hooks/useVisualKits.ts` — hook para consumir catálogo na UI futura
+
+### Limitações
+
+- `preview_image_url` null em todos — Fase 3+ gera previews
+- Nenhuma UI de seleção de kit ainda — Fase 4 (Wizard de Brand)
+
+### Próxima fase
+
+Fase 3: Renderer Universal HTML/CSS → PNG (Puppeteer ou alternativa compatível com Edge/Node)
+
+---
+
 ## 🎨 Sprint 3 — Fase 1/6 — Schema + Storage
 
 ### O que foi adicionado

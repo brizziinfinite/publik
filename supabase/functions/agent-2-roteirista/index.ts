@@ -1,4 +1,5 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { withRetry } from "../_shared/llm-retry.ts";
 
 // ─── CORS ────────────────────────────────────────────────────────────────────
 
@@ -511,12 +512,38 @@ Deno.serve(async (req: Request) => {
     let costUsd = 0;
 
     if (llmProvider === "anthropic" && anthropicKey) {
-      const r = await callAnthropic(prompt, anthropicKey);
+      const retryResult = await withRetry(() => callAnthropic(prompt, anthropicKey!), {
+        maxAttempts: 3,
+        initialDelayMs: 2000,
+        backoffMultiplier: 4,
+      });
+      if (runId) {
+        await supabase.from("agent_runs")
+          .update({ input_payload: { idea_id: ideaId, format: i.format, package_id: packageId, attempts: retryResult.attempts } })
+          .eq("id", runId);
+      }
+      if (!retryResult.success || !retryResult.data) {
+        throw new Error(retryResult.final_error ?? "LLM falhou após retries");
+      }
+      const r = retryResult.data;
       rawText = r.text; inputTok = r.inputTokens; outputTok = r.outputTokens;
       llmModel = "claude-haiku-4-5-20251001";
       costUsd = inputTok * HAIKU_PRICING.input + outputTok * HAIKU_PRICING.output;
     } else {
-      const r = await callGemini(prompt, geminiKey!);
+      const retryResult = await withRetry(() => callGemini(prompt, geminiKey!), {
+        maxAttempts: 3,
+        initialDelayMs: 2000,
+        backoffMultiplier: 4,
+      });
+      if (runId) {
+        await supabase.from("agent_runs")
+          .update({ input_payload: { idea_id: ideaId, format: i.format, package_id: packageId, attempts: retryResult.attempts } })
+          .eq("id", runId);
+      }
+      if (!retryResult.success || !retryResult.data) {
+        throw new Error(retryResult.final_error ?? "LLM falhou após retries");
+      }
+      const r = retryResult.data;
       rawText = r.text; inputTok = r.inputTokens; outputTok = r.outputTokens;
       llmModel = "gemini-2.5-flash";
       costUsd = inputTok * GEMINI_PRICING.input + outputTok * GEMINI_PRICING.output;

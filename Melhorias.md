@@ -224,6 +224,45 @@ Mesmas do Sprint 1 (`GEMINI_API_KEY`, `LLM_PROVIDER`).
 
 ---
 
+## 🔁 Hotfix — LLM Retry com Backoff Exponencial
+
+### O que muda
+
+- Helper compartilhado `supabase/functions/_shared/llm-retry.ts` com `withRetry<T>()`
+- `agent-1-strategist` e `agent-2-roteirista` envolvem todas as chamadas Gemini e Anthropic com retry automático
+
+### Erros retryable (fazem retry)
+
+| Código | Motivo |
+|--------|--------|
+| 503 | Service Unavailable (Gemini sobrecarregado) |
+| 429 | Too Many Requests |
+| 529 | Overloaded (padrão Anthropic) |
+| Network errors | fetch failed, timeout, ECONNRESET |
+
+Outros erros (4xx exceto 429, 500, 502) falham direto — sem retry.
+
+### Backoff
+
+3 tentativas total: delays 2s → 8s → 30s + jitter aleatório 0-500ms por tentativa.
+
+### Onde ver as tentativas
+
+```sql
+SELECT
+  status,
+  input_payload->'attempts' as attempts,
+  llm_cost_usd,
+  duration_ms
+FROM public.agent_runs
+WHERE agent_name = 'agent_2_roteirista'
+ORDER BY started_at DESC LIMIT 1;
+```
+
+`attempts` é array JSONB em `input_payload` — cada elemento tem `attempt`, `status`, `error_message`, `duration_ms`, `timestamp`.
+
+---
+
 ## 📊 Analytics (futuro)
 
 - [ ] Taxa de engajamento por post

@@ -660,6 +660,51 @@ export type Database = {
         }
         Relationships: []
       }
+      render_formats: {
+        Row: {
+          aspect_ratio: string
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          height: number
+          id: string
+          is_active: boolean | null
+          name: string
+          platform: string
+          safe_zone: Json | null
+          surface: string
+          width: number
+        }
+        Insert: {
+          aspect_ratio: string
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          height: number
+          id: string
+          is_active?: boolean | null
+          name: string
+          platform: string
+          safe_zone?: Json | null
+          surface: string
+          width: number
+        }
+        Update: {
+          aspect_ratio?: string
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          height?: number
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          platform?: string
+          safe_zone?: Json | null
+          surface?: string
+          width?: number
+        }
+        Relationships: []
+      }
       social_accounts: {
         Row: {
           access_token: string
@@ -992,6 +1037,7 @@ export type Post = Tables<"posts">
 export type Profile = Tables<"profiles">
 export type BrandPhoto = Tables<"brand_photos">
 export type VisualKit = Tables<"visual_kits">
+export type RenderFormatRow = Tables<"render_formats">
 export type ContentPackage = Tables<"content_packages">
 export type AgentRun = Tables<"agent_runs">
 export type BrandPlan = Tables<"brand_plans">

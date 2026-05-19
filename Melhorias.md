@@ -263,6 +263,53 @@ ORDER BY started_at DESC LIMIT 1;
 
 ---
 
+## 🎨 Sprint 3 — Fase 3/6 — Renderer Universal (@vercel/og)
+
+### Implementado
+- Tabela `render_formats` com 8 formatos cadastrados (apenas 4:5 ativo)
+- API Route `/api/render-package` (POST, Node.js runtime)
+- Template `EditorialSlide` com 3 layouts: hook, content, cta
+- Suporte automático aos tokens visuais da brand (`visual_identity_v2`)
+- Upload PNGs no bucket `rendered-carousels`
+- Botão "Renderizar carrossel" em `/dashboard/packages/[id]` (carrossel only)
+- Galeria de slides com badge slide N/total + botão download
+- Re-render forçado com botão "Re-renderizar"
+- Idempotência: retorna cache se já existir e `re_render=false`
+
+### Formatos suportados
+- ✅ `instagram_feed_4x5` (1080×1350) — ATIVO
+- ⏳ `instagram_feed_1x1` — Sprint 4
+- ⏳ `instagram_story_9x16` — Sprint 4
+- ⏳ `tiktok_9x16` — Sprint 5
+- ⏳ `linkedin_feed_1x1` — Sprint 5 (B2B)
+- ⏳ `facebook_feed_1x1` — Sprint 5
+- ⏳ `twitter_16x9` — Sprint 6+
+- ⏳ `pinterest_2x3` — Sprint 6+
+
+### Como ativar formato adicional no futuro
+1. `UPDATE public.render_formats SET is_active = true WHERE id = 'instagram_story_9x16';`
+2. Ajustar template `EditorialSlide` se layout precisar variar com aspect ratio
+3. Testar com 1 pacote real
+
+### Fontes em `public/fonts/`
+- Bricolage Grotesque (Bold 700, ExtraBold 800) — display editorial
+- Crimson Pro (Regular 400, SemiBold 600) — body editorial
+- JetBrains Mono (Medium 500) — labels mono
+- Anton (Regular 400) — display bold (uso futuro kits bold)
+
+### Limitações desta fase
+- Apenas formato `carrossel` renderiza. Reel, story, blog, email, post ainda não.
+- Apenas mood `editorial` tem template implementado. Mood `bold` virá em Sprint 4.
+- Sem foto custom por slide (Fase 6)
+- Sem Agente 3 Designer (Fase 5) — role inferido pela posição do slide
+
+### Custo
+- `@vercel/og`: zero (incluído no plano Vercel)
+- Supabase Storage: zero (bucket público, ~50KB por PNG)
+- Por carrossel de 7 slides: ~350KB no Storage
+
+---
+
 ## 🎨 Sprint 3 — Fase 2/6 — Catálogo de Visual Kits
 
 ### 9 kits inseridos

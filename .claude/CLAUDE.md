@@ -44,3 +44,9 @@ O arquivo deve conter:
 4. **Pendências** — o que ficou para a próxima sessão
 
 5. **iniciar uma nova sessão**, leia o diário do dia anterior para retomar o contexto sem precisar reexplicar tudo.
+
+### REGRA #8 Estilo de comunicação
+- Respostas curtas e diretas: 'fazer X, motivo Y, opinião Z'
+- Sem explicações longas, sem comparativos, sem múltiplas opções listadas
+- Brizzi pede mais detalhe quando precisar
+" >> CLAUDE.md

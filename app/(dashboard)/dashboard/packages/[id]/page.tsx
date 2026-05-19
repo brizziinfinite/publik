@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { Layers, ArrowLeft, Loader2, CheckCircle, XCircle } from "lucide-react";
+import { Layers, ArrowLeft, Loader2, CheckCircle, XCircle, ImageIcon, RefreshCw, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useRouter, useParams } from "next/navigation";
@@ -56,6 +56,9 @@ interface ContentPackage {
   blog_content: { title?: string; intro?: string; conclusion?: string } | null;
   email_content: { subject?: string; preview_text?: string; body_html?: string } | null;
   post_content: { caption?: string; first_comment?: string } | null;
+  rendered_image_urls: string[] | null;
+  rendered_at: string | null;
+  render_error: string | null;
 }
 
 // ─── Helpers visuais ─────────────────────────────────────────────────────────
@@ -251,12 +254,15 @@ export default function PackageDetailPage() {
   const [converting, setConverting] = useState(false);
   const [approving, setApproving] = useState(false);
   const [rejecting, setRejecting] = useState(false);
+  const [rendering, setRendering] = useState(false);
+  // ref para recarregar o package após render sem adicionar load como dep de effect
+  const reloadRef = useRef<() => Promise<void>>(async () => { /* no-op inicial */ });
 
   useEffect(() => {
     async function load() {
       const { data, error } = await supabase
         .from("content_packages")
-        .select("*")
+        .select("*, rendered_image_urls, rendered_at, render_error")
         .eq("id", params.id)
         .single();
 
@@ -268,8 +274,36 @@ export default function PackageDetailPage() {
       }
       setLoading(false);
     }
+    reloadRef.current = load;
     void load();
   }, [params.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function handleRender(reRender = false) {
+    if (!pkg) return;
+    setRendering(true);
+    try {
+      const res = await fetch("/api/render-package", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ package_id: pkg.id, re_render: reRender }),
+      });
+      const json = await res.json() as { slides?: unknown[]; error?: string; cached?: boolean };
+      if (!res.ok) {
+        toast.error("Erro ao renderizar: " + (json.error ?? res.statusText));
+      } else {
+        toast.success(
+          json.cached
+            ? "Imagens já renderizadas (cache)."
+            : `${json.slides?.length ?? 0} slides renderizados!`
+        );
+        await reloadRef.current();
+      }
+    } catch (err: unknown) {
+      toast.error("Erro ao renderizar: " + (err instanceof Error ? err.message : String(err)));
+    } finally {
+      setRendering(false);
+    }
+  }
 
   async function handleApprove() {
     if (!pkg) return;
@@ -357,6 +391,91 @@ export default function PackageDetailPage() {
       <div className="rounded-lg border border-border bg-card p-6">
         <PackageContent pkg={pkg} />
       </div>
+
+      {/* Renderização de imagens — apenas carrossel */}
+      {pkg.format === "carrossel" && (
+        <div className="rounded-lg border border-border bg-card p-6 flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ImageIcon className="h-5 w-5 text-muted-foreground" />
+              <h2 className="font-semibold text-sm">Imagens renderizadas</h2>
+            </div>
+            <div className="flex gap-2">
+              {pkg.rendered_image_urls && pkg.rendered_image_urls.length > 0 ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleRender(true)}
+                  disabled={rendering}
+                  className="gap-1.5"
+                >
+                  {rendering
+                    ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    : <RefreshCw className="h-3.5 w-3.5" />}
+                  Re-renderizar
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  onClick={() => handleRender(false)}
+                  disabled={rendering}
+                  className="gap-1.5"
+                >
+                  {rendering
+                    ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    : <ImageIcon className="h-3.5 w-3.5" />}
+                  {rendering ? "Renderizando..." : "Renderizar carrossel"}
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {pkg.render_error && (
+            <p className="text-xs text-destructive">Erro: {pkg.render_error}</p>
+          )}
+
+          {pkg.rendered_image_urls && pkg.rendered_image_urls.length > 0 ? (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                {pkg.rendered_image_urls.map((url, idx) => (
+                  <div key={idx} className="relative rounded-lg overflow-hidden border border-border bg-muted/30 flex flex-col">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={url}
+                      alt={`Slide ${idx + 1}`}
+                      className="w-full object-cover"
+                      style={{ aspectRatio: "4/5" }}
+                    />
+                    <div className="flex items-center justify-between px-2 py-1.5">
+                      <span className="text-xs text-muted-foreground">
+                        Slide {idx + 1}/{pkg.rendered_image_urls!.length}
+                      </span>
+                      <a
+                        href={url}
+                        download={`slide-${idx + 1}.png`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {pkg.rendered_at && (
+                <p className="text-xs text-muted-foreground">
+                  Renderizado em {new Date(pkg.rendered_at).toLocaleString("pt-BR")}
+                </p>
+              )}
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Clique em &quot;Renderizar carrossel&quot; para gerar as imagens PNG (1080×1350).
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Visual prompt */}
       {pkg.visual_prompt && (

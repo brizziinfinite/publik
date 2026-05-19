@@ -340,9 +340,8 @@ ORDER BY started_at DESC LIMIT 1;
 - `preview_image_url` null em todos — Fase 3+ gera previews
 - Nenhuma UI de seleção de kit ainda — Fase 4 (Wizard de Brand)
 
-### Próxima fase
-
-Fase 3: Renderer Universal HTML/CSS → PNG (Puppeteer ou alternativa compatível com Edge/Node)
+### ✅ Concluído
+Fase 3 implementada: `@vercel/og` + API Route `/api/render-package` + galeria em `/dashboard/packages/[id]`
 
 ---
 
@@ -379,14 +378,8 @@ Fase 3: Renderer Universal HTML/CSS → PNG (Puppeteer ou alternativa compatíve
 - `types/database.ts` regenerado via `supabase gen types`
 - Aliases adicionados: `Brand`, `Post`, `Profile`, `BrandPhoto`, `VisualKit`, `ContentPackage`, `AgentRun`, `BrandPlan`, `SocialAccount`, `PostStatus`, `SocialPlatform`
 
-### Limitações desta fase
-
-- `visual_kits` vazio — Fase 2 popula com 9 kits visuais
-- Nenhuma UI criada — só fundação de dados
-
-### Próxima fase
-
-Fase 2: Catálogo de 9 kits visuais + renderer básico (HTML/CSS → PNG via Puppeteer ou similar)
+### ✅ Concluído
+Fase 2 populou 9 kits. Fase 3 criou o renderer. Schema 100% implementado.
 
 ---
 
@@ -487,7 +480,8 @@ Obsidian também abre o vault no desktop para edição humana — você atualiza
 ### Quando fazer
 
 Pré-requisitos antes de começar Hermes:
-- [ ] Sprint 3 (carrossel visual) concluído
+- [x] Sprint 3 Fases 1/2/3 — schema, visual kits, renderer @vercel/og ✅
+- [ ] Sprint 3 Fases 4/5/6 — Wizard de Brand, Agente Designer, UI completa
 - [ ] pg_cron configurado (agendamento automático dos agentes)
 - [ ] UI de brand_plans criada
 - [ ] Pelo menos 2 semanas de uso dos agentes 1+2 para validar fluxo manual antes de automatizar

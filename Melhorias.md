@@ -263,6 +263,110 @@ ORDER BY started_at DESC LIMIT 1;
 
 ---
 
+## 🤖 Hermes Agent + Obsidian (futuro — pós Sprint 3)
+
+> Fazer depois que Agente 1, 2 e 3 estiverem estáveis. Hermes é camada de orquestração por cima dos agentes existentes.
+
+### O que é
+
+Hermes Agent (Nous Research, MIT) = agente autônomo auto-hospedado com:
+- Memória persistente entre sessões
+- Skills reutilizáveis (receitas aprendidas)
+- Controle via Telegram ou Discord
+- Execução real: shell, Docker, GitHub, APIs
+
+### Arquitetura no Publik
+
+```
+Telegram/Discord
+      │
+      ▼
+┌─────────────────────────────────┐
+│        Hermes Agent (VPS)        │
+│  ┌──────────┐  ┌──────────────┐ │
+│  │ Memória  │  │    Skills    │ │
+│  │ Obsidian │  │ (receitas)   │ │
+│  └──────────┘  └──────────────┘ │
+└──────────┬──────────────────────┘
+           │ chama via HTTP
+           ▼
+┌──────────────────────────────────┐
+│        Supabase Edge Functions   │
+│  agent-1-strategist              │
+│  agent-2-roteirista              │
+│  agent-3-designer (futuro)       │
+│  render-carousel (futuro)        │
+└──────────────────────────────────┘
+           │
+           ▼
+┌──────────────────────────────────┐
+│        Supabase DB               │
+│  brand_plans, content_ideas,     │
+│  content_packages, posts         │
+└──────────────────────────────────┘
+```
+
+### Fluxos que Hermes habilitaria
+
+| Comando no Telegram | Ação |
+|---------------------|------|
+| "gera ideias da semana" | dispara agent-1 para todas brands ativas |
+| "aprova ideia 3" | atualiza `content_ideas.status = approved` |
+| "gera pacote da ideia aprovada" | dispara agent-2 |
+| "mostra pacotes pendentes" | retorna lista com links |
+| "agenda post para sexta" | atualiza `posts.scheduled_for` |
+| "como estão os agentes?" | retorna últimos `agent_runs` |
+| "qual ideia performou melhor?" | futura query de analytics |
+
+### Como o Obsidian entra
+
+Obsidian funciona como **vault de memória estruturada** do Hermes:
+
+```
+obsidian-vault/
+├── brands/
+│   └── irrigaagro.md        ← persona, tom, pillars, CTA, pricing
+├── decisoes/
+│   └── 2026-05-19.md        ← por que escolhemos Gemini, formato carrossel etc.
+├── skills/
+│   └── gerar-semana.md      ← receita: como disparar agente 1 + aprovar ideias
+├── contexto/
+│   └── sprint-atual.md      ← o que está sendo construído agora
+└── preferencias/
+    └── brizzi.md            ← tom preferido, horários, plataformas prioritárias
+```
+
+Hermes lê esses arquivos antes de executar qualquer ação → não precisa reexplicar contexto a cada sessão.
+
+Obsidian também abre o vault no desktop para edição humana — você atualiza `irrigaagro.md` com novas informações da brand e o Hermes usa automaticamente na próxima execução.
+
+### Infraestrutura necessária
+
+- [ ] VPS (DigitalOcean/Hetzner — ~$6/mês) com Docker
+- [ ] Hermes Agent instalado (repositório Nous Research)
+- [ ] Bot Telegram criado via @BotFather
+- [ ] Obsidian instalado + vault sincronizado via Git ou Obsidian Sync
+- [ ] Variáveis de ambiente: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `TELEGRAM_TOKEN`
+- [ ] Skills criadas: `gerar-ideias`, `aprovar-ideia`, `gerar-pacote`, `status-agentes`
+
+### Skills a criar (ordem de prioridade)
+
+1. `status-agentes` — retorna últimos 5 `agent_runs` com status/custo
+2. `gerar-ideias` — chama agent-1-strategist via HTTP + confirma no Telegram
+3. `aprovar-ideia` — lista ideias pending + aprova pelo número
+4. `gerar-pacote` — chama agent-2-roteirista para ideia aprovada
+5. `resumo-semanal` — consolida ideias/pacotes/posts da semana em texto
+
+### Quando fazer
+
+Pré-requisitos antes de começar Hermes:
+- [ ] Sprint 3 (carrossel visual) concluído
+- [ ] pg_cron configurado (agendamento automático dos agentes)
+- [ ] UI de brand_plans criada
+- [ ] Pelo menos 2 semanas de uso dos agentes 1+2 para validar fluxo manual antes de automatizar
+
+---
+
 ## 📊 Analytics (futuro)
 
 - [ ] Taxa de engajamento por post

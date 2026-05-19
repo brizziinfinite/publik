@@ -39,7 +39,19 @@ interface ContentPackage {
   error_message: string | null;
   created_at: string;
   carousel_slides: CarouselSlide[] | null;
-  reel_script: { hook_3s?: string; narration?: string; cta_final?: string } | null;
+  reel_script: {
+    hook_3s?: string;
+    duration_seconds?: number;
+    scenes?: Array<{
+      scene?: number;
+      voiceover?: string;
+      onscreen_text?: string;
+      visual_description?: string;
+      duration_s?: number;
+    }>;
+    cta_final?: string;
+    music_mood?: string;
+  } | null;
   story_frames: StoryFrame[] | null;
   blog_content: { title?: string; intro?: string; conclusion?: string } | null;
   email_content: { subject?: string; preview_text?: string; body_html?: string } | null;
@@ -94,10 +106,20 @@ function ReelContent({ script }: { script: NonNullable<ContentPackage["reel_scri
           <p className="text-sm font-semibold">&quot;{script.hook_3s}&quot;</p>
         </div>
       )}
-      {script.narration && (
-        <div className="rounded-lg border border-border p-4">
-          <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">Narração</p>
-          <p className="text-sm whitespace-pre-wrap">{script.narration}</p>
+      {script.duration_seconds && (
+        <p className="text-xs text-muted-foreground">Duração estimada: {script.duration_seconds}s</p>
+      )}
+      {script.scenes && script.scenes.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase">Cenas</p>
+          {script.scenes.map((scene, i) => (
+            <div key={i} className="rounded-lg border border-border p-4 flex flex-col gap-1">
+              <p className="text-xs font-semibold text-muted-foreground">Cena {scene.scene ?? i + 1} {scene.duration_s ? `· ${scene.duration_s}s` : ""}</p>
+              {scene.voiceover && <p className="text-sm"><span className="font-medium">Voiceover:</span> {scene.voiceover}</p>}
+              {scene.onscreen_text && <p className="text-sm"><span className="font-medium">Tela:</span> {scene.onscreen_text}</p>}
+              {scene.visual_description && <p className="text-xs text-muted-foreground">{scene.visual_description}</p>}
+            </div>
+          ))}
         </div>
       )}
       {script.cta_final && (
@@ -105,6 +127,9 @@ function ReelContent({ script }: { script: NonNullable<ContentPackage["reel_scri
           <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">CTA Final</p>
           <p className="text-sm font-medium text-primary">{script.cta_final}</p>
         </div>
+      )}
+      {script.music_mood && (
+        <p className="text-xs text-muted-foreground">Música sugerida: {script.music_mood}</p>
       )}
     </div>
   );

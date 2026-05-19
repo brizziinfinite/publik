@@ -15,6 +15,7 @@ import {
   Check,
   Plus,
   Menu,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -38,6 +39,7 @@ import { useEffect, useState } from "react";
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Ideias", href: "/dashboard/ideas", icon: Sparkles },
   { label: "Posts", href: "/dashboard/posts", icon: Image },
   { label: "Fontes", href: "/dashboard/sources/new", icon: FileText },
   { label: "Calendário", href: "/dashboard/calendar", icon: Calendar },

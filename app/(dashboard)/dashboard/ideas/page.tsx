@@ -431,7 +431,7 @@ export default function IdeasPage() {
       toast.error("Erro ao salvar: " + error.message);
     } else {
       setIdeas((prev) =>
-        prev.map((i) => (i.id === id ? { ...i, ...patch } : i))
+        prev.map((i) => (i.id === id ? ({ ...i, ...patch } as ContentIdea) : i))
       );
       toast.success("Ideia atualizada!");
     }

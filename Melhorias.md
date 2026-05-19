@@ -263,6 +263,50 @@ ORDER BY started_at DESC LIMIT 1;
 
 ---
 
+## 🎨 Sprint 3 — Fase 1/6 — Schema + Storage
+
+### O que foi adicionado
+
+**`public.brands` — novos campos:**
+- `visual_identity_v2` (jsonb) — tokens completos: palette, typography, mood, layout_preferences
+- `segment` (text) — segmento livre: "agro", "oficina_mecanica", "confeitaria", etc
+- `visual_kit_id` (text) — referência ao kit visual escolhido
+
+**Tabela `public.brand_photos`:**
+- Banco de fotos da brand com tags, dimensões, contagem de uso
+- RLS owner-only, índice GIN em `tags` para busca semântica
+- `uploaded_by`: 'user' | 'agent' | 'unsplash' | 'pexels'
+
+**Tabela `public.visual_kits`:**
+- Catálogo de presets visuais (leitura pública, sem RLS de escrita)
+- Campos: mood, palette, typography, layout_preferences, segments
+- Vazio por enquanto — Fase 2 popula com 9 kits
+
+**`public.content_packages` — novos campos:**
+- `rendered_image_urls` (text[]) — URLs dos PNGs renderizados por slide
+- `rendered_at` (timestamptz) — quando foi renderizado
+- `render_error` (text) — erro de renderização se houver
+- `layout_plan` (jsonb) — plano do Agente 3 Designer
+
+**Storage buckets:**
+- `brand-photos` (público) — fotos enviadas pelo usuário ou agentes
+- `rendered-carousels` (público) — PNGs gerados pelo renderer
+
+**Tipos TypeScript:**
+- `types/database.ts` regenerado via `supabase gen types`
+- Aliases adicionados: `Brand`, `Post`, `Profile`, `BrandPhoto`, `VisualKit`, `ContentPackage`, `AgentRun`, `BrandPlan`, `SocialAccount`, `PostStatus`, `SocialPlatform`
+
+### Limitações desta fase
+
+- `visual_kits` vazio — Fase 2 popula com 9 kits visuais
+- Nenhuma UI criada — só fundação de dados
+
+### Próxima fase
+
+Fase 2: Catálogo de 9 kits visuais + renderer básico (HTML/CSS → PNG via Puppeteer ou similar)
+
+---
+
 ## 🤖 Hermes Agent + Obsidian (futuro — pós Sprint 3)
 
 > Fazer depois que Agente 1, 2 e 3 estiverem estáveis. Hermes é camada de orquestração por cima dos agentes existentes.

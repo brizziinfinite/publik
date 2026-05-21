@@ -390,7 +390,7 @@ export default function PackageDetailPage() {
             <Button
               size="sm"
               variant="outline"
-              onClick={() => router.push(`/dashboard/posts/${pkg.post_id}`)}
+              onClick={() => router.push(`/dashboard/posts`)}
             >
               Ver post
             </Button>

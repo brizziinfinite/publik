@@ -1,48 +1,60 @@
 -- ============================================================================
--- Migration: 001_sources_and_assets
+-- Migration: 20260520000001_sources_and_assets
 -- Feature: Fonte → Pacote (Publik)
--- Roda no SQL Editor do Supabase ou via supabase migration new
+-- Renomeado: content_packages → source_packages (evita colisão com Sprint 2)
+--            content_packages (Sprint 2) = pacotes do Agente 2 (ligados a content_ideas)
+--            source_packages (este arquivo) = pacotes da feature Fontes (ligados a sources)
 -- ============================================================================
 
--- 1. ENUMS
+-- 1. COLUNAS EXTRAS EM brands
 -- ----------------------------------------------------------------------------
 
 alter table public.brands
   add column if not exists voice text,
   add column if not exists audience text;
 
-create type source_type as enum ('text', 'audio', 'url', 'pdf');
-
-create type source_status as enum (
-  'queued',
-  'extracting',
-  'extracted',
-  'generating',
-  'ready',
-  'partial',
-  'failed'
-);
-
-create type asset_kind as enum (
-  'carousel',
-  'stories',
-  'reel_script',
-  'email',
-  'blog'
-);
-
-create type asset_status as enum (
-  'pending',
-  'generating',
-  'ready',
-  'failed'
-);
-
--- 2. TABELA: sources
+-- 2. ENUMS
 -- ----------------------------------------------------------------------------
--- Fonte de input que vai virar um pacote de conteúdo.
 
-create table public.sources (
+do $$ begin
+  create type source_type as enum ('text', 'audio', 'url', 'pdf');
+exception when duplicate_object then null; end $$;
+
+do $$ begin
+  create type source_status as enum (
+    'queued',
+    'extracting',
+    'extracted',
+    'generating',
+    'ready',
+    'partial',
+    'failed'
+  );
+exception when duplicate_object then null; end $$;
+
+do $$ begin
+  create type asset_kind as enum (
+    'carousel',
+    'stories',
+    'reel_script',
+    'email',
+    'blog'
+  );
+exception when duplicate_object then null; end $$;
+
+do $$ begin
+  create type asset_status as enum (
+    'pending',
+    'generating',
+    'ready',
+    'failed'
+  );
+exception when duplicate_object then null; end $$;
+
+-- 3. TABELA: sources
+-- ----------------------------------------------------------------------------
+
+create table if not exists public.sources (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   brand_id uuid not null references public.brands(id) on delete cascade,
@@ -50,17 +62,13 @@ create table public.sources (
   type source_type not null,
   status source_status not null default 'queued',
 
-  -- input bruto (depende do type)
-  raw_text text,                    -- type=text: texto colado
-  raw_url text,                     -- type=url
-  storage_path text,                -- type=audio|pdf: caminho no Supabase Storage
+  raw_text text,
+  raw_url text,
+  storage_path text,
 
-  -- conteúdo extraído / normalizado (sempre vira texto)
   extracted_text text,
   extracted_metadata jsonb default '{}'::jsonb,
-  -- ex: { duration_seconds: 612, language: "pt-BR", title: "...", author: "..." }
 
-  -- erros de extração
   error_message text,
 
   created_at timestamptz not null default now(),
@@ -73,39 +81,35 @@ create table public.sources (
   )
 );
 
-create index sources_user_id_idx on public.sources(user_id);
-create index sources_brand_id_idx on public.sources(brand_id);
-create index sources_status_idx on public.sources(status);
+create index if not exists sources_user_id_idx  on public.sources(user_id);
+create index if not exists sources_brand_id_idx on public.sources(brand_id);
+create index if not exists sources_status_idx   on public.sources(status);
 
--- 3. TABELA: content_packages
+-- 4. TABELA: source_packages
 -- ----------------------------------------------------------------------------
--- Agrupa os 5 assets gerados a partir de uma source.
--- 1:1 com source no v1, mas modelado como 1:N pra permitir regenerar pacote
--- inteiro com prompt diferente no futuro.
+-- Agrupa os assets gerados a partir de uma source.
+-- (NÃO confundir com content_packages do Sprint 2/Agente 2)
 
-create table public.content_packages (
+create table if not exists public.source_packages (
   id uuid primary key default gen_random_uuid(),
   source_id uuid not null references public.sources(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
   brand_id uuid not null references public.brands(id) on delete cascade,
 
-  -- snapshot da config usada na geração (pra reproduzir/auditar)
   generation_config jsonb not null default '{}'::jsonb,
-  -- ex: { model: "claude-haiku-4-5", temperature: 0.7, brand_voice_sample: "..." }
 
   created_at timestamptz not null default now()
 );
 
-create index content_packages_source_id_idx on public.content_packages(source_id);
-create index content_packages_user_id_idx on public.content_packages(user_id);
+create index if not exists source_packages_source_id_idx on public.source_packages(source_id);
+create index if not exists source_packages_user_id_idx   on public.source_packages(user_id);
 
--- 4. TABELA: content_assets
+-- 5. TABELA: content_assets
 -- ----------------------------------------------------------------------------
--- Cada asset individual (carrossel, stories, reel_script, email, blog).
 
-create table public.content_assets (
+create table if not exists public.content_assets (
   id uuid primary key default gen_random_uuid(),
-  package_id uuid not null references public.content_packages(id) on delete cascade,
+  package_id uuid not null references public.source_packages(id) on delete cascade,
   source_id uuid not null references public.sources(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
   brand_id uuid not null references public.brands(id) on delete cascade,
@@ -113,18 +117,10 @@ create table public.content_assets (
   kind asset_kind not null,
   status asset_status not null default 'pending',
 
-  -- payload estruturado do asset (formato depende do kind)
-  -- carousel: { slides: [{ title, body, layout }] }
-  -- stories: { stories: [{ text, visual_hint }] }
-  -- reel_script: { hook, body, cta, broll_hints, voice_notes }
-  -- email: { subject, preview, body_html, body_text, cta }
-  -- blog: { title, slug, body_md, meta_description, tags }
   content jsonb,
 
-  -- erro de geração
   error_message text,
 
-  -- tokens consumidos (auditoria de custo)
   tokens_input int default 0,
   tokens_output int default 0,
 
@@ -134,12 +130,12 @@ create table public.content_assets (
   constraint content_assets_unique_kind_per_package unique (package_id, kind)
 );
 
-create index content_assets_package_id_idx on public.content_assets(package_id);
-create index content_assets_source_id_idx on public.content_assets(source_id);
-create index content_assets_user_id_idx on public.content_assets(user_id);
-create index content_assets_status_idx on public.content_assets(status);
+create index if not exists content_assets_package_id_idx on public.content_assets(package_id);
+create index if not exists content_assets_source_id_idx  on public.content_assets(source_id);
+create index if not exists content_assets_user_id_idx    on public.content_assets(user_id);
+create index if not exists content_assets_status_idx     on public.content_assets(status);
 
--- 5. ALTERAR posts pra ligar com source (opcional)
+-- 6. COLUNAS EXTRAS EM posts
 -- ----------------------------------------------------------------------------
 
 alter table public.posts
@@ -149,7 +145,7 @@ alter table public.posts
 create index if not exists posts_source_id_idx on public.posts(source_id);
 create index if not exists posts_asset_id_idx  on public.posts(asset_id);
 
--- 6. TRIGGER: updated_at
+-- 7. TRIGGER: updated_at
 -- ----------------------------------------------------------------------------
 
 create or replace function public.tg_set_updated_at()
@@ -159,22 +155,24 @@ begin
   return new;
 end $$;
 
+drop trigger if exists sources_updated_at on public.sources;
 create trigger sources_updated_at
   before update on public.sources
   for each row execute function public.tg_set_updated_at();
 
+drop trigger if exists content_assets_updated_at on public.content_assets;
 create trigger content_assets_updated_at
   before update on public.content_assets
   for each row execute function public.tg_set_updated_at();
 
--- 7. RLS
+-- 8. RLS
 -- ----------------------------------------------------------------------------
 
-alter table public.sources           enable row level security;
-alter table public.content_packages  enable row level security;
-alter table public.content_assets    enable row level security;
+alter table public.sources          enable row level security;
+alter table public.source_packages  enable row level security;
+alter table public.content_assets   enable row level security;
 
--- sources: dono vê/edita seus próprios
+-- sources
 create policy "sources_select_own"
   on public.sources for select
   using (auth.uid() = user_id);
@@ -191,20 +189,20 @@ create policy "sources_delete_own"
   on public.sources for delete
   using (auth.uid() = user_id);
 
--- content_packages: idem
-create policy "content_packages_select_own"
-  on public.content_packages for select
+-- source_packages
+create policy "source_packages_select_own"
+  on public.source_packages for select
   using (auth.uid() = user_id);
 
-create policy "content_packages_insert_own"
-  on public.content_packages for insert
+create policy "source_packages_insert_own"
+  on public.source_packages for insert
   with check (auth.uid() = user_id);
 
-create policy "content_packages_delete_own"
-  on public.content_packages for delete
+create policy "source_packages_delete_own"
+  on public.source_packages for delete
   using (auth.uid() = user_id);
 
--- content_assets: idem
+-- content_assets
 create policy "content_assets_select_own"
   on public.content_assets for select
   using (auth.uid() = user_id);
@@ -222,20 +220,19 @@ create policy "content_assets_delete_own"
   using (auth.uid() = user_id);
 
 -- ----------------------------------------------------------------------------
--- IMPORTANTE: o worker (Express + BullMQ) usa SERVICE_ROLE_KEY, que bypassa RLS.
--- O frontend (Next.js) usa o token do user, então RLS protege normalmente.
+-- IMPORTANTE: worker (Express + BullMQ) usa SERVICE_ROLE_KEY → bypassa RLS.
+-- Frontend (Next.js) usa token do user → RLS protege normalmente.
 -- ----------------------------------------------------------------------------
 
--- 8. STORAGE BUCKET
+-- 9. STORAGE BUCKET (rodar separado se CLI não suportar)
 -- ----------------------------------------------------------------------------
--- Rodar no painel do Supabase ou via CLI:
---
 -- insert into storage.buckets (id, name, public)
--- values ('sources', 'sources', false);
+-- values ('sources', 'sources', false)
+-- on conflict (id) do nothing;
 --
 -- create policy "sources_storage_owner_only"
 --   on storage.objects for all
 --   using (bucket_id = 'sources' and auth.uid()::text = (storage.foldername(name))[1])
 --   with check (bucket_id = 'sources' and auth.uid()::text = (storage.foldername(name))[1]);
 --
--- Padrão de path: sources/{user_id}/{source_id}.{ext}
+-- Path padrão: sources/{user_id}/{source_id}.{ext}

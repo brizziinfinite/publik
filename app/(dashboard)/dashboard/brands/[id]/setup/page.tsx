@@ -7,11 +7,10 @@ import { Button } from "@/components/ui/button";
 import { WizardProgress } from "@/components/brands/wizard/WizardProgress";
 import type { Brand, BrandPlan } from "@/types/database";
 
-// Steps importados depois de criados
-// import { StepIdentidade } from "@/components/brands/wizard/StepIdentidade";
-// import { StepVoz } from "@/components/brands/wizard/StepVoz";
-// import { StepOferta } from "@/components/brands/wizard/StepOferta";
-// import { StepPlano } from "@/components/brands/wizard/StepPlano";
+import { StepIdentidade, canAdvanceIdentidade } from "@/components/brands/wizard/StepIdentidade";
+import { StepVoz, canAdvanceVoz } from "@/components/brands/wizard/StepVoz";
+import { StepOferta, canAdvanceOferta } from "@/components/brands/wizard/StepOferta";
+import { StepPlano, canAdvancePlano } from "@/components/brands/wizard/StepPlano";
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -34,8 +33,8 @@ export interface WizardState {
   main_cta: string;
   pricing_anchor_phrases: string;       // textarea — uma por linha
   pricing_price_brl: string;            // string pois é input, parse no submit
-  content_formats_priority: string;     // textarea — uma por linha
-  hashtags_core: string;                // textarea — uma por linha
+  content_formats_priority: string[];   // checkboxes
+  hashtags_core: string[];              // chips
   // Step 4 — Plano
   goal_primary: string;
   current_phase: string;
@@ -75,11 +74,11 @@ function brandToState(brand: Brand, plan: BrandPlan | null): WizardState {
       ? String(pricing.price_brl_per_hectare_month)
       : "",
     content_formats_priority: Array.isArray(assets.content_formats_priority)
-      ? (assets.content_formats_priority as string[]).join("\n")
-      : "",
+      ? (assets.content_formats_priority as string[])
+      : [],
     hashtags_core: Array.isArray(assets.hashtags_core)
-      ? (assets.hashtags_core as string[]).join("\n")
-      : "",
+      ? (assets.hashtags_core as string[])
+      : [],
     goal_primary: plan?.goal_primary ?? "",
     current_phase: plan?.current_phase ?? "validate_message",
     current_blocker: plan?.current_blocker ?? "",
@@ -89,6 +88,43 @@ function brandToState(brand: Brand, plan: BrandPlan | null): WizardState {
     weekly_priority_3: prio[2] ?? "",
     weekly_priority_4: prio[3] ?? "",
   };
+}
+
+// ---------------------------------------------------------------------------
+// getMissingFields — retorna lista de campos faltantes por step (para feedback)
+// canAdvance é step.length === 0
+// ---------------------------------------------------------------------------
+
+function getMissingFields(step: Step, s: WizardState): string[] {
+  if (step === 1) {
+    const missing: string[] = [];
+    if (!s.name.trim()) missing.push("nome");
+    if (!s.slug.trim()) missing.push("slug");
+    if (!s.niche.trim()) missing.push("nicho");
+    if (!s.segment) missing.push("segmento");
+    return missing;
+  }
+  if (step === 2) {
+    const missing: string[] = [];
+    if (!s.tone.trim()) missing.push("tom de voz");
+    if (!s.target_persona.trim()) missing.push("persona-alvo");
+    if (s.pillars.length === 0 || !s.pillars.some((p) => p.name.trim())) {
+      missing.push("pelo menos 1 pilar");
+    }
+    return missing;
+  }
+  if (step === 3) {
+    const missing: string[] = [];
+    if (!s.main_offer.trim()) missing.push("oferta principal");
+    if (!s.main_cta.trim()) missing.push("CTA principal");
+    return missing;
+  }
+  // step 4
+  const missing: string[] = [];
+  if (!s.goal_primary.trim()) missing.push("objetivo principal");
+  if (!s.current_phase) missing.push("fase atual");
+  if (!s.main_cta.trim()) missing.push("CTA principal");
+  return missing;
 }
 
 export default function BrandSetupPage() {
@@ -204,24 +240,47 @@ export default function BrandSetupPage() {
         </p>
       )}
 
-      {/* Steps — substituir por componentes reais conforme forem criados */}
+      {/* Steps */}
       <div className="rounded-lg border bg-card p-6">
-        <p className="text-muted-foreground text-sm">
-          Step {currentStep} — em construção
-        </p>
-      </div>
-
-      {/* Navegação (placeholder — cada step vai ter os seus botões) */}
-      <div className="flex justify-between">
-        <Button variant="outline" onClick={handleBack} disabled={currentStep === 1}>
-          Voltar
-        </Button>
-        <Button
-          onClick={() => handleNext(state)}
-          disabled={saving}
-        >
-          {saving ? "Salvando..." : currentStep === 4 ? "Concluir" : "Próximo"}
-        </Button>
+        {currentStep === 1 && (
+          <StepIdentidade
+            state={state}
+            saving={saving}
+            missingFields={getMissingFields(1, state)}
+            onChange={(partial) => setState((prev) => prev ? { ...prev, ...partial } : prev)}
+            onNext={handleNext}
+          />
+        )}
+        {currentStep === 2 && (
+          <StepVoz
+            state={state}
+            saving={saving}
+            missingFields={getMissingFields(2, state)}
+            onChange={(partial) => setState((prev) => prev ? { ...prev, ...partial } : prev)}
+            onNext={handleNext}
+            onBack={handleBack}
+          />
+        )}
+        {currentStep === 3 && (
+          <StepOferta
+            state={state}
+            saving={saving}
+            missingFields={getMissingFields(3, state)}
+            onChange={(partial) => setState((prev) => prev ? { ...prev, ...partial } : prev)}
+            onNext={handleNext}
+            onBack={handleBack}
+          />
+        )}
+        {currentStep === 4 && (
+          <StepPlano
+            state={state}
+            saving={saving}
+            missingFields={getMissingFields(4, state)}
+            onChange={(partial) => setState((prev) => prev ? { ...prev, ...partial } : prev)}
+            onNext={handleNext}
+            onBack={handleBack}
+          />
+        )}
       </div>
     </div>
   );
@@ -260,19 +319,16 @@ function buildPayload(step: Step, s: Partial<WizardState>) {
       ? s.pricing_anchor_phrases.split("\n").map((l) => l.trim()).filter(Boolean)
       : [];
     const price_brl = s.pricing_price_brl ? parseFloat(s.pricing_price_brl) : null;
-    const formats = s.content_formats_priority
-      ? s.content_formats_priority.split("\n").map((l) => l.trim()).filter(Boolean)
-      : [];
-    const hashtags = s.hashtags_core
-      ? s.hashtags_core.split("\n").map((l) => l.trim()).filter(Boolean)
-      : [];
 
     return {
       step: 3,
       main_offer: s.main_offer || null,
       main_cta: s.main_cta || null,
       pricing: { anchor_phrases, price_brl_per_hectare_month: price_brl },
-      brand_assets: { content_formats_priority: formats, hashtags_core: hashtags },
+      brand_assets: {
+        content_formats_priority: s.content_formats_priority ?? [],
+        hashtags_core: s.hashtags_core ?? [],
+      },
     };
   }
 

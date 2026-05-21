@@ -311,12 +311,19 @@ Campos em `brand_plans`:
 - [x] `app/api/brands/[id]/setup/route.ts` — GET (carrega brand+plan) + PATCH parcial por step (zod discriminatedUnion, upsert brand_plans, merge JSONB)
 - [x] `components/brands/wizard/WizardProgress.tsx` — barra 1-2-3-4 com labels, check icon, linha conectora
 - [x] `app/(dashboard)/dashboard/brands/[id]/setup/page.tsx` — shell: carrega GET, WizardState flat, saveStep parcial, buildPayload por step, navegação Voltar/Próximo/Concluir
-- [ ] `components/brands/wizard/StepIdentidade.tsx` — **PRÓXIMO**
-- [ ] `components/brands/wizard/StepVoz.tsx`
-- [ ] `components/brands/wizard/StepOferta.tsx` (inputs simples — sem drag)
-- [ ] `components/brands/wizard/StepPlano.tsx`
-- [ ] Validação `canAdvance()` por step (botão Próximo disabled)
-- [ ] Integração dos steps no page.tsx + testes
+- [x] `components/brands/wizard/StepIdentidade.tsx` — logo upload, slug auto, cor, nicho, segmento, visual kit (grid 9 kits com preview de cores)
+- [x] `components/brands/wizard/StepVoz.tsx` — tom, persona, pilares CRUD (até 5, com peso slider), tópicos proibidos chips
+- [x] `components/brands/wizard/StepOferta.tsx` — oferta, CTA, âncoras de preço, preço R$/ha, formatos checkboxes com rank, hashtags chips
+- [x] `components/brands/wizard/StepPlano.tsx` — objetivo, fase, bloqueio, prazo, 4 prioridades semanais
+- [x] Validação `getMissingFields()` centralizada no page.tsx — botão Próximo disabled + texto "Preencha: X, Y"
+- [x] Integração dos steps no page.tsx (render condicional + missingFields passado como prop)
+- [x] TS zero erros + build compila (erro prerender é falta de .env.local — pré-existente)
+
+### Testes pendentes (requer .env.local)
+- [ ] Testar wizard end-to-end no browser: criar brand → 4 steps → verificar no banco
+- [ ] Testar save parcial (fechar no meio + reabrir)
+- [ ] Testar validação (campos obrigatórios bloqueiam avanço)
+- [ ] Verificar brand configurada roda Agente 1 sem erro
 
 ---
 

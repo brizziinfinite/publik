@@ -263,6 +263,62 @@ ORDER BY started_at DESC LIMIT 1;
 
 ---
 
+## 🧙 Sprint 3 Fase 4 — Brand Wizard (em andamento)
+
+Rota: `/dashboard/brands/[id]/setup`
+
+Wizard multi-step para configurar tudo de uma brand antes de rodar os agentes.
+**Fora do escopo:** sugestão de kit por IA, CRUD posterior de brand_plans.
+
+### Step 1 — Identidade
+Campos em `brands`:
+- `name` — nome da brand
+- `slug` — identificador URL
+- `primary_color` — cor hex
+- `logo` — upload para Supabase Storage
+- `niche` — nicho do negócio
+- `segment` — segmento (B2B / B2C / ambos) ← **nova coluna**
+- `visual_kit_id` — FK para `visual_kits` (botão "Pular por agora" → default kit)
+
+### Step 2 — Voz
+Campos em `brands`:
+- `tone` — tom de voz (textarea)
+- `target_persona` — persona-alvo (textarea)
+- `pillars` — até 5 pilares, cada um com `{ name, description, weight }` (JSONB[])
+- `forbidden_topics` — tópicos proibidos (text[], chips input)
+
+### Step 3 — Oferta
+Campos em `brand_plans` (`pricing` JSONB + `brand_assets` JSONB):
+- `pricing.anchor_phrases` — frases âncora de preço (text[])
+- `pricing.price_brl_per_hectare_month` — preço por hectare/mês (number) OU campo livre
+- `brand_assets.content_formats_priority` — prioridade de formatos (reorder drag)
+- `brand_assets.hashtags_core` — hashtags principais (chips input)
+
+### Step 4 — Plano
+Campos em `brand_plans`:
+- `goal_primary` — objetivo principal (textarea curto)
+- `current_phase` — fase atual (select: validate_message / validate_offer / predictable_sales / scale_acquisition)
+- `current_blocker` — bloqueio atual (textarea)
+- `main_offer` — oferta principal (input)
+- `main_cta` — CTA principal (input)
+- `timeline_days` — prazo em dias (number)
+- `weekly_priorities` — 4 textareas curtos, um por prioridade semanal
+
+### Checklist de implementação
+
+- [ ] `app/(dashboard)/dashboard/brands/[id]/setup/page.tsx` — shell da rota
+- [ ] `components/brands/wizard/BrandWizard.tsx` — orquestrador de steps + estado global
+- [ ] `components/brands/wizard/StepIdentidade.tsx`
+- [ ] `components/brands/wizard/StepVoz.tsx`
+- [ ] `components/brands/wizard/StepOferta.tsx`
+- [ ] `components/brands/wizard/StepPlano.tsx`
+- [ ] `components/brands/wizard/WizardProgress.tsx` — barra de progresso (4 steps)
+- [ ] `app/api/brands/[id]/setup/route.ts` — PATCH brands + upsert brand_plans
+- [ ] Migration: adicionar `segment` em `brands` + `visual_kit_id` em `brands`
+- [ ] Atualizar `types/database.ts` com novos campos
+
+---
+
 ## 🤖 Hermes Agent + Obsidian (futuro — pós Sprint 3)
 
 > Fazer depois que Agente 1, 2 e 3 estiverem estáveis. Hermes é camada de orquestração por cima dos agentes existentes.

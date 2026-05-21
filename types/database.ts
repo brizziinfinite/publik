@@ -30,6 +30,9 @@ export type Database = {
           pillars: Json[]
           forbidden_topics: string[]
           is_active: boolean
+          // segment: sem CHECK constraint no banco — validação no frontend (select fixo) e API (zod)
+          segment: string | null
+          visual_kit_id: string | null
         }
         Insert: {
           created_at?: string
@@ -46,6 +49,8 @@ export type Database = {
           pillars?: Json[]
           forbidden_topics?: string[]
           is_active?: boolean
+          segment?: string | null
+          visual_kit_id?: string | null
         }
         Update: {
           created_at?: string
@@ -62,6 +67,8 @@ export type Database = {
           pillars?: Json[]
           forbidden_topics?: string[]
           is_active?: boolean
+          segment?: string | null
+          visual_kit_id?: string | null
         }
         Relationships: []
       }
@@ -250,6 +257,10 @@ export type Database = {
           llm_cost_usd: number
           generation_attempts: number
           error_message: string | null
+          rendered_image_urls: string[]
+          render_error: string | null
+          rendered_at: string | null
+          layout_plan: Json | null
           created_at: string
           updated_at: string
         }
@@ -275,6 +286,10 @@ export type Database = {
           llm_cost_usd?: number
           generation_attempts?: number
           error_message?: string | null
+          rendered_image_urls?: string[]
+          render_error?: string | null
+          rendered_at?: string | null
+          layout_plan?: Json | null
           created_at?: string
           updated_at?: string
         }
@@ -300,6 +315,10 @@ export type Database = {
           llm_cost_usd?: number
           generation_attempts?: number
           error_message?: string | null
+          rendered_image_urls?: string[]
+          render_error?: string | null
+          rendered_at?: string | null
+          layout_plan?: Json | null
           updated_at?: string
         }
         Relationships: [
@@ -503,6 +522,182 @@ export type Database = {
         }
         Relationships: []
       }
+      visual_kits: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          segments: string[]
+          mood: 'editorial' | 'bold' | 'playful'
+          palette: Json
+          typography: Json
+          layout_preferences: Json
+          preview_image_url: string | null
+          is_active: boolean
+          display_order: number
+          created_at: string
+        }
+        Insert: {
+          id: string
+          name: string
+          description?: string | null
+          segments?: string[]
+          mood: 'editorial' | 'bold' | 'playful'
+          palette: Json
+          typography: Json
+          layout_preferences: Json
+          preview_image_url?: string | null
+          is_active?: boolean
+          display_order?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          segments?: string[]
+          mood?: 'editorial' | 'bold' | 'playful'
+          palette?: Json
+          typography?: Json
+          layout_preferences?: Json
+          preview_image_url?: string | null
+          is_active?: boolean
+          display_order?: number
+          created_at?: string
+        }
+        Relationships: []
+      }
+      render_formats: {
+        Row: {
+          id: string
+          name: string
+          platform: string
+          surface: 'feed' | 'story' | 'reel' | 'post' | 'cover'
+          width: number
+          height: number
+          aspect_ratio: string
+          safe_zone: Json
+          description: string | null
+          is_active: boolean
+          display_order: number
+          created_at: string
+        }
+        Insert: {
+          id: string
+          name: string
+          platform: string
+          surface: 'feed' | 'story' | 'reel' | 'post' | 'cover'
+          width: number
+          height: number
+          aspect_ratio: string
+          safe_zone?: Json
+          description?: string | null
+          is_active?: boolean
+          display_order?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          platform?: string
+          surface?: 'feed' | 'story' | 'reel' | 'post' | 'cover'
+          width?: number
+          height?: number
+          aspect_ratio?: string
+          safe_zone?: Json
+          description?: string | null
+          is_active?: boolean
+          display_order?: number
+          created_at?: string
+        }
+        Relationships: []
+      }
+      brand_photos: {
+        Row: {
+          id: string
+          brand_id: string
+          user_id: string
+          storage_path: string
+          public_url: string
+          width: number | null
+          height: number | null
+          size_bytes: number | null
+          alt_text: string | null
+          tags: string[]
+          uploaded_by: string
+          used_count: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          brand_id: string
+          user_id: string
+          storage_path: string
+          public_url: string
+          width?: number | null
+          height?: number | null
+          size_bytes?: number | null
+          alt_text?: string | null
+          tags?: string[]
+          uploaded_by?: string
+          used_count?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          brand_id?: string
+          user_id?: string
+          storage_path?: string
+          public_url?: string
+          width?: number | null
+          height?: number | null
+          size_bytes?: number | null
+          alt_text?: string | null
+          tags?: string[]
+          uploaded_by?: string
+          used_count?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_photos_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      source_packages: {
+        Row: {
+          id: string
+          source_id: string
+          user_id: string
+          brand_id: string
+          status: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          source_id: string
+          user_id: string
+          brand_id: string
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          source_id?: string
+          user_id?: string
+          brand_id?: string
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -548,3 +743,7 @@ export type BrandPlan = Tables<"brand_plans">
 export type ContentIdea = Tables<"content_ideas">
 export type ContentPackage = Tables<"content_packages">
 export type AgentRun = Tables<"agent_runs">
+export type VisualKitRow = Tables<"visual_kits">
+export type RenderFormatRow = Tables<"render_formats">
+export type BrandPhoto = Tables<"brand_photos">
+export type SourcePackage = Tables<"source_packages">

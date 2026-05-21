@@ -263,6 +263,70 @@ ORDER BY started_at DESC LIMIT 1;
 
 ---
 
+## 🧙 Sprint 3 Fase 4 — Brand Wizard (em andamento)
+
+Rota: `/dashboard/brands/[id]/setup`
+
+Wizard multi-step para configurar tudo de uma brand antes de rodar os agentes.
+**Fora do escopo:** sugestão de kit por IA, CRUD posterior de brand_plans.
+
+### Step 1 — Identidade
+Campos em `brands`:
+- `name` — nome da brand
+- `slug` — identificador URL
+- `primary_color` — cor hex
+- `logo` — upload para Supabase Storage
+- `niche` — nicho do negócio
+- `segment` — segmento (B2B / B2C / ambos) ← **nova coluna**
+- `visual_kit_id` — FK para `visual_kits` (botão "Pular por agora" → default kit)
+
+### Step 2 — Voz
+Campos em `brands`:
+- `tone` — tom de voz (textarea)
+- `target_persona` — persona-alvo (textarea)
+- `pillars` — até 5 pilares, cada um com `{ name, description, weight }` (JSONB[])
+- `forbidden_topics` — tópicos proibidos (text[], chips input)
+
+### Step 3 — Oferta
+Campos em `brand_plans` (`pricing` JSONB + `brand_assets` JSONB):
+- `pricing.anchor_phrases` — frases âncora de preço (text[])
+- `pricing.price_brl_per_hectare_month` — preço por hectare/mês (number) OU campo livre
+- `brand_assets.content_formats_priority` — prioridade de formatos (reorder drag)
+- `brand_assets.hashtags_core` — hashtags principais (chips input)
+
+### Step 4 — Plano
+Campos em `brand_plans`:
+- `goal_primary` — objetivo principal (textarea curto)
+- `current_phase` — fase atual (select: validate_message / validate_offer / predictable_sales / scale_acquisition)
+- `current_blocker` — bloqueio atual (textarea)
+- `main_offer` — oferta principal (input)
+- `main_cta` — CTA principal (input)
+- `timeline_days` — prazo em dias (number)
+- `weekly_priorities` — 4 textareas curtos, um por prioridade semanal
+
+### Checklist de implementação
+
+- [x] Migration: `segment` e `visual_kit_id` em `brands` — coberta pela Sprint 3 Fase 1 (já no banco)
+- [x] Atualizar `types/database.ts` — visual_kits, render_formats, brand_photos, source_packages, rendered_image_urls, render_error, rendered_at em content_packages
+- [x] `app/api/brands/[id]/setup/route.ts` — GET (carrega brand+plan) + PATCH parcial por step (zod discriminatedUnion, upsert brand_plans, merge JSONB)
+- [x] `components/brands/wizard/WizardProgress.tsx` — barra 1-2-3-4 com labels, check icon, linha conectora
+- [x] `app/(dashboard)/dashboard/brands/[id]/setup/page.tsx` — shell: carrega GET, WizardState flat, saveStep parcial, buildPayload por step, navegação Voltar/Próximo/Concluir
+- [x] `components/brands/wizard/StepIdentidade.tsx` — logo upload, slug auto, cor, nicho, segmento, visual kit (grid 9 kits com preview de cores)
+- [x] `components/brands/wizard/StepVoz.tsx` — tom, persona, pilares CRUD (até 5, com peso slider), tópicos proibidos chips
+- [x] `components/brands/wizard/StepOferta.tsx` — oferta, CTA, âncoras de preço, preço R$/ha, formatos checkboxes com rank, hashtags chips
+- [x] `components/brands/wizard/StepPlano.tsx` — objetivo, fase, bloqueio, prazo, 4 prioridades semanais
+- [x] Validação `getMissingFields()` centralizada no page.tsx — botão Próximo disabled + texto "Preencha: X, Y"
+- [x] Integração dos steps no page.tsx (render condicional + missingFields passado como prop)
+- [x] TS zero erros + build compila (erro prerender é falta de .env.local — pré-existente)
+
+### Testes pendentes (requer .env.local)
+- [ ] Testar wizard end-to-end no browser: criar brand → 4 steps → verificar no banco
+- [ ] Testar save parcial (fechar no meio + reabrir)
+- [ ] Testar validação (campos obrigatórios bloqueiam avanço)
+- [ ] Verificar brand configurada roda Agente 1 sem erro
+
+---
+
 ## 🤖 Hermes Agent + Obsidian (futuro — pós Sprint 3)
 
 > Fazer depois que Agente 1, 2 e 3 estiverem estáveis. Hermes é camada de orquestração por cima dos agentes existentes.

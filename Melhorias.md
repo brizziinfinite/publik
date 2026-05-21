@@ -306,16 +306,17 @@ Campos em `brand_plans`:
 
 ### Checklist de implementação
 
-- [ ] `app/(dashboard)/dashboard/brands/[id]/setup/page.tsx` — shell da rota
-- [ ] `components/brands/wizard/BrandWizard.tsx` — orquestrador de steps + estado global
-- [ ] `components/brands/wizard/StepIdentidade.tsx`
+- [x] Migration: `segment` e `visual_kit_id` em `brands` — coberta pela Sprint 3 Fase 1 (já no banco)
+- [x] Atualizar `types/database.ts` — visual_kits, render_formats, brand_photos, source_packages, rendered_image_urls, render_error, rendered_at em content_packages
+- [x] `app/api/brands/[id]/setup/route.ts` — GET (carrega brand+plan) + PATCH parcial por step (zod discriminatedUnion, upsert brand_plans, merge JSONB)
+- [x] `components/brands/wizard/WizardProgress.tsx` — barra 1-2-3-4 com labels, check icon, linha conectora
+- [x] `app/(dashboard)/dashboard/brands/[id]/setup/page.tsx` — shell: carrega GET, WizardState flat, saveStep parcial, buildPayload por step, navegação Voltar/Próximo/Concluir
+- [ ] `components/brands/wizard/StepIdentidade.tsx` — **PRÓXIMO**
 - [ ] `components/brands/wizard/StepVoz.tsx`
-- [ ] `components/brands/wizard/StepOferta.tsx`
+- [ ] `components/brands/wizard/StepOferta.tsx` (inputs simples — sem drag)
 - [ ] `components/brands/wizard/StepPlano.tsx`
-- [ ] `components/brands/wizard/WizardProgress.tsx` — barra de progresso (4 steps)
-- [ ] `app/api/brands/[id]/setup/route.ts` — PATCH brands + upsert brand_plans
-- [ ] Migration: adicionar `segment` em `brands` + `visual_kit_id` em `brands`
-- [ ] Atualizar `types/database.ts` com novos campos
+- [ ] Validação `canAdvance()` por step (botão Próximo disabled)
+- [ ] Integração dos steps no page.tsx + testes
 
 ---
 
